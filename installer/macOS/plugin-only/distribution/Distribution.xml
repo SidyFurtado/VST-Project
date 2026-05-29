@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>AUREQ</title>
+    
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    
+    <!-- UI Resources -->
+    <background file="background.png" alignment="bottomleft" scaling="none"/>
+    <welcome file="welcome.html"/>
+    <license file="license.html"/>
+    
+    <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
+    
+    <choices-outline>
+        <line choice="default">
+            <line choice="br.com.sidyfurtado.aureq.vst3"/>
+        </line>
+    </choices-outline>
+    
+    <choice id="default"/>
+    
+    <choice id="br.com.sidyfurtado.aureq.vst3" visible="false">
+        <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
+    </choice>
+    
+    <pkg-ref id="br.com.sidyfurtado.aureq.vst3" version="0.9.0" onConclusion="none">AUREQ-VST3-component.pkg</pkg-ref>
+</installer-gui-script>

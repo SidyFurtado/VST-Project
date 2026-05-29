@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 540" width="740" height="540">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bg-installer" cx="50%" cy="50%" r="70%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#0D1F35" />
+      <stop offset="100%" stop-color="#0B0F12" />
+    </radialGradient>
+
+    <!-- Glass Panel Gradient -->
+    <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.05)" />
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.01)" />
+    </linearGradient>
+
+    <!-- Aurora Nebula -->
+    <radialGradient id="aurora-installer" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(34, 211, 238, 0.15)" />
+      <stop offset="100%" stop-color="rgba(34, 211, 238, 0)" />
+    </radialGradient>
+
+    <!-- Glass Shadow -->
+    <filter id="glass-shadow-large" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Deep Cosmic Background -->
+  <rect width="740" height="540" fill="url(#bg-installer)" />
+
+  <!-- Nebula -->
+  <ellipse cx="600" cy="200" rx="350" ry="250" fill="url(#aurora-installer)" />
+
+  <!-- Background Abstract EQ Curve -->
+  <path d="M -100,500 C 100,500 200,200 400,200 C 500,200 600,400 800,100" 
+        fill="none" 
+        stroke="rgba(34, 211, 238, 0.15)" 
+        stroke-width="8" 
+        stroke-linecap="round" />
+  
+  <circle cx="400" cy="200" r="16" fill="rgba(34, 211, 238, 0.4)" />
+  <circle cx="400" cy="200" r="6" fill="#22D3EE" />
+
+  <!-- Glassmorphism Accent Panel (Right side) -->
+  <rect x="440" y="40" width="260" height="460" rx="24" fill="url(#glass-grad)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" filter="url(#glass-shadow-large)" />
+
+</svg>

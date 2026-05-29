@@ -1,0 +1,73 @@
+# ==============================================================================
+# Gitignore para VST - Project (Monorepo C++ / JUCE / Plugins de Áudio)
+# ==============================================================================
+
+# Compilados e Saídas de Build
+builds/mac/*
+!builds/mac/.gitkeep
+builds/windows/*
+!builds/windows/.gitkeep
+builds/installers/*
+!builds/installers/.gitkeep
+
+# Diretórios de build locais (JUCE / CMake padrão)
+**/Builds/
+**/JuceLibraryCode/
+**/cmake-build-*/
+**/out/
+**/bin/
+**/obj/
+
+# Formatos de Plugins e Binários de Saída
+*.vst
+*.vst3
+*.component
+*.app
+*.aax
+*.dll
+*.dylib
+*.so
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.exe
+
+# Arquivos de IDE e Editores
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.xcodeproj/
+.vs/
+*.workspace
+.clang-format
+.history/
+
+# Arquivos de Sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs e Temporários
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+crash-dumps/
+
+# Dependências Gerenciadas (se houver no futuro)
+**/node_modules/
+**/vcpkg_installed/
+**/conan/
+build/

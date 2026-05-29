@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 90" width="740" height="90">
+  <defs>
+    <radialGradient id="bg-grad-header" cx="80%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0D1F35" />
+      <stop offset="100%" stop-color="#0B0F12" />
+    </radialGradient>
+    <linearGradient id="glow-line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0" />
+      <stop offset="80%" stop-color="#22D3EE" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="740" height="90" fill="url(#bg-grad-header)" />
+
+  <!-- Bottom Accent Line -->
+  <rect x="0" y="88" width="740" height="2" fill="url(#glow-line)" />
+
+  <!-- ASTRA / AUREQ Typography Placeholder -->
+  <!-- Note: using paths or standard system fonts to ensure it renders anywhere without external font files -->
+  <text x="40" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF" letter-spacing="4">
+    AUREQ
+  </text>
+  <text x="160" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#94A3B8" letter-spacing="2">
+    ASTRA AUDIO SUITE
+  </text>
+
+  <!-- Subtle EQ Curve in Header -->
+  <path d="M 400,90 C 450,40 500,40 550,90 C 600,10 650,40 700,90" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="2" />
+  <circle cx="550" cy="90" r="4" fill="#22D3EE" />
+  
+</svg>

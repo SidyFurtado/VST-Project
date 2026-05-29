@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="br.com.sidyfurtado.aureq.vst3" postinstall-action="none" version="0.9.0" format-version="2" generator-version="InstallCmds-864.12 (25F71)" install-location="/" auth="root">
+    <payload numberOfFiles="31" installKBytes="28267"/>
+    <bundle path="./Library/Audio/Plug-Ins/VST3/AUREQ.vst3" id="br.com.sidyfurtado.aureq" CFBundleShortVersionString="0.9.0" CFBundleVersion="0.9.0"/>
+    <bundle-version>
+        <bundle id="br.com.sidyfurtado.aureq"/>
+    </bundle-version>
+    <upgrade-bundle>
+        <bundle id="br.com.sidyfurtado.aureq"/>
+    </upgrade-bundle>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier/>
+    <relocate/>
+</pkg-info>
