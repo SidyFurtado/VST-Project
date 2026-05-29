@@ -1,0 +1,77 @@
+name: Build AUREQ Windows VST3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "plugins/01_EQ/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/windows-build-aureq.yml"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build Release
+        run: cmake --build build --config Release --target AUREQ AUREQ_FilterTests
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          $testExe = Get-ChildItem -Path build -Filter "AUREQ_FilterTests.exe" -Recurse -File | Select-Object -First 1
+          if ($testExe) {
+            Write-Host "Running tests from: $($testExe.FullName)"
+            & $testExe.FullName
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Tests failed!"
+              exit 1
+            }
+            Write-Host "All tests passed successfully."
+          } else {
+            Write-Error "AUREQ_FilterTests.exe not found!"
+            exit 1
+          }
+
+      - name: Locate and Stage VST3
+        shell: pwsh
+        run: |
+          $vst3Path = Get-ChildItem -Path build -Filter "AUREQ.vst3" -Recurse -Directory | Select-Object -First 1
+          if ($vst3Path) {
+            Write-Host "Found VST3 at: $($vst3Path.FullName)"
+            New-Item -ItemType Directory -Force -Path installer/Windows/plugin-only/staging/VST3
+            Copy-Item -Path $vst3Path.FullName -Destination installer/Windows/plugin-only/staging/VST3/AUREQ.vst3 -Recurse -Force
+            Write-Host "VST3 successfully staged to staging/VST3/AUREQ.vst3"
+          } else {
+            Write-Error "AUREQ.vst3 not found in build directory!"
+            exit 1
+          }
+
+      - name: Compile Inno Setup Installer
+        run: iscc installer/Windows/plugin-only/scripts/AUREQ-plugin-only.iss
+
+      - name: Upload VST3 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AUREQ-0.9.0-rc1-Windows-VST3
+          path: installer/Windows/plugin-only/staging/VST3/AUREQ.vst3
+          if-no-files-found: error
+
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AUREQ-0.9.0-rc1-Windows-plugin-only-installer
+          path: installer/Windows/plugin-only/output/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe
+          if-no-files-found: error
