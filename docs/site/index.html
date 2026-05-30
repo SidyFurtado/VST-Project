@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ASTRA Audio Suite — Professional VST Plugins by Sidy Furtado</title>
-  <meta name="description" content="ASTRA Audio Suite is a collection of precision VST3 plugins crafted by Sidy Furtado for modern mixing engineers. Download AUREQ — the flagship parametric EQ — free for macOS and Windows." />
-  <meta property="og:title" content="ASTRA Audio Suite — Professional VST Plugins" />
-  <meta property="og:description" content="Precision parametric EQ for modern mixing engineers. Free beta available for macOS and Windows." />
+  <title>ASTRA Audio Suite — Plugins VST Profissionais por Sidy Furtado</title>
+  <meta name="description" content="ASTRA Audio Suite é uma coleção de plugins VST3 de precisão criados por Sidy Furtado para engenheiros de mixagem modernos. Baixe o AUREQ — o EQ paramétrico principal — grátis para macOS e Windows." />
+  <meta property="og:title" content="ASTRA Audio Suite — Plugins VST Profissionais" />
+  <meta property="og:description" content="EQ paramétrico de precisão para engenheiros de mixagem modernos. Beta gratuito disponível para macOS e Windows." />
   <meta property="og:image" content="https://sidyfurtado.github.io/VST-Project/assets/aureq-icon.svg" />
   <meta name="theme-color" content="#22D3EE" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -113,9 +113,7 @@
     .nav-brand {
       display: flex; align-items: center; gap: 10px;
     }
-    .nav-logo {
-      width: 32px; height: 32px;
-    }
+    .nav-logo { width: 32px; height: 32px; }
     .nav-name {
       font-size: 15px; font-weight: 700;
       background: linear-gradient(90deg, #fff, var(--cyan));
@@ -144,7 +142,6 @@
       box-shadow: 0 0 30px rgba(34,211,238,0.5);
       transform: translateY(-1px);
     }
-    .nav-mobile-toggle { display: none; }
 
     /* ============================================================
        HERO
@@ -156,9 +153,7 @@
       padding: 120px 24px 80px;
       overflow: hidden;
     }
-    #hero-canvas {
-      position: absolute; inset: 0; z-index: 0;
-    }
+    #hero-canvas { position: absolute; inset: 0; z-index: 0; }
     .hero-bg-gradient {
       position: absolute; inset: 0; z-index: 0;
       background: radial-gradient(ellipse 70% 70% at 50% 45%,
@@ -166,10 +161,7 @@
         rgba(11,15,24,0.95) 55%,
         var(--bg-deepest) 100%);
     }
-    .hero-content {
-      position: relative; z-index: 2;
-      max-width: 760px;
-    }
+    .hero-content { position: relative; z-index: 2; max-width: 760px; }
     .hero-icon-wrap {
       width: 140px; height: 140px;
       margin: 0 auto 40px;
@@ -278,20 +270,14 @@
       padding: 120px 0;
       background: linear-gradient(180deg, var(--bg-deepest) 0%, var(--bg-cosmic) 50%, var(--bg-deepest) 100%);
     }
-    .about-inner {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
-    }
+    .about-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
     .about-text .section-label { margin-bottom: 16px; }
     .about-heading {
       font-size: clamp(32px, 5vw, 48px); font-weight: 800; letter-spacing: -0.02em;
       line-height: 1.15; margin-bottom: 20px;
     }
-    .about-body {
-      font-size: 17px; color: var(--text-muted); line-height: 1.75; margin-bottom: 32px;
-    }
-    .about-features {
-      display: flex; flex-direction: column; gap: 16px;
-    }
+    .about-body { font-size: 17px; color: var(--text-muted); line-height: 1.75; margin-bottom: 32px; }
+    .about-features { display: flex; flex-direction: column; gap: 16px; }
     .about-feature {
       display: flex; align-items: flex-start; gap: 14px;
       padding: 16px 20px;
@@ -316,9 +302,7 @@
     }
     .feature-text h4 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
     .feature-text p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-    .about-visual {
-      position: relative; display: flex; align-items: center; justify-content: center;
-    }
+    .about-visual { position: relative; display: flex; align-items: center; justify-content: center; }
     .about-orbit-wrap {
       position: relative; width: 320px; height: 320px;
       animation: slow-spin 60s linear infinite;
@@ -331,30 +315,19 @@
     .about-orbit-glow {
       position: absolute; inset: -40px;
       background: radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 65%);
-      border-radius: 50%;
-      pointer-events: none;
+      border-radius: 50%; pointer-events: none;
     }
 
     /* ============================================================
-       PLUGIN COLLECTION
+       PLUGINS
     ============================================================ */
-    #plugins {
-      padding: 120px 0;
-      background: var(--bg-deepest);
-    }
-    .plugins-header {
-      text-align: center; margin-bottom: 72px;
-    }
+    #plugins { padding: 120px 0; background: var(--bg-deepest); }
+    .plugins-header { text-align: center; margin-bottom: 72px; }
     .plugins-title {
-      font-size: clamp(32px, 5vw, 52px); font-weight: 800; letter-spacing: -0.02em;
-      margin-bottom: 14px;
+      font-size: clamp(32px, 5vw, 52px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px;
     }
-    .plugins-subtitle {
-      font-size: 17px; color: var(--text-muted);
-    }
-    .plugins-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;
-    }
+    .plugins-subtitle { font-size: 17px; color: var(--text-muted); }
+    .plugins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
     .plugin-card {
       position: relative; overflow: hidden;
       background: var(--bg-panel);
@@ -364,9 +337,7 @@
       backdrop-filter: blur(16px);
       transition: var(--transition);
     }
-    .plugin-card:hover {
-      transform: translateY(-6px);
-    }
+    .plugin-card:hover { transform: translateY(-6px); }
     .plugin-card.available {
       border-color: rgba(34,211,238,0.25);
       box-shadow: 0 0 40px rgba(34,211,238,0.08), inset 0 1px 0 rgba(34,211,238,0.1);
@@ -375,10 +346,7 @@
       border-color: rgba(34,211,238,0.5);
       box-shadow: 0 0 60px rgba(34,211,238,0.15), 0 20px 40px rgba(0,0,0,0.4);
     }
-    .plugin-card.coming {
-      opacity: 0.45;
-      cursor: default;
-    }
+    .plugin-card.coming { opacity: 0.45; cursor: default; }
     .plugin-card.coming:hover { transform: none; }
     .plugin-card-glow {
       position: absolute; top: -60px; right: -60px;
@@ -386,25 +354,12 @@
       background: radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 70%);
       pointer-events: none;
     }
-    .plugin-icon {
-      width: 72px; height: 72px; margin-bottom: 20px;
-      filter: drop-shadow(0 0 12px rgba(34,211,238,0.3));
-    }
+    .plugin-icon { width: 72px; height: 72px; margin-bottom: 20px; filter: drop-shadow(0 0 12px rgba(34,211,238,0.3)); }
     .plugin-badge { margin-bottom: 14px; }
-    .plugin-name {
-      font-size: 26px; font-weight: 900; letter-spacing: -0.01em;
-      margin-bottom: 6px;
-    }
-    .plugin-name-sub {
-      font-size: 12px; font-weight: 600; color: var(--cyan); letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 14px;
-    }
-    .plugin-desc {
-      font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 28px;
-    }
-    .plugin-download-buttons {
-      display: flex; flex-direction: column; gap: 10px;
-    }
+    .plugin-name { font-size: 26px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .plugin-name-sub { font-size: 12px; font-weight: 600; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+    .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 28px; }
+    .plugin-download-buttons { display: flex; flex-direction: column; gap: 10px; }
     .btn-dl-mac, .btn-dl-win {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       padding: 12px 18px;
@@ -413,51 +368,26 @@
       transition: var(--transition);
       cursor: pointer; border: none;
     }
-    .btn-dl-mac {
-      background: var(--cyan); color: #04111C;
-      box-shadow: 0 0 20px rgba(34,211,238,0.3);
-    }
-    .btn-dl-mac:hover {
-      background: #fff;
-      box-shadow: 0 0 30px rgba(34,211,238,0.5);
-      transform: translateY(-1px);
-    }
-    .btn-dl-win {
-      background: rgba(248,250,252,0.07);
-      color: var(--text-primary);
-      border: 1px solid rgba(248,250,252,0.15);
-    }
-    .btn-dl-win:hover {
-      background: rgba(248,250,252,0.13);
-      border-color: var(--border-hover);
-      transform: translateY(-1px);
-    }
-    .plugin-specs {
-      margin-top: 20px; padding-top: 20px;
-      border-top: 1px solid var(--border);
-      display: flex; gap: 20px;
-    }
+    .btn-dl-mac { background: var(--cyan); color: #04111C; box-shadow: 0 0 20px rgba(34,211,238,0.3); }
+    .btn-dl-mac:hover { background: #fff; box-shadow: 0 0 30px rgba(34,211,238,0.5); transform: translateY(-1px); }
+    .btn-dl-win { background: rgba(248,250,252,0.07); color: var(--text-primary); border: 1px solid rgba(248,250,252,0.15); }
+    .btn-dl-win:hover { background: rgba(248,250,252,0.13); border-color: var(--border-hover); transform: translateY(-1px); }
+    .plugin-specs { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 20px; }
     .spec-item { font-size: 12px; color: var(--text-faint); }
     .spec-item strong { display: block; color: var(--text-muted); font-weight: 600; margin-bottom: 1px; }
-
-    /* EQ Curve SVG animation on AUREQ card */
     .eq-curve-animated path {
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
+      stroke-dasharray: 1000; stroke-dashoffset: 1000;
       animation: draw-eq 2.5s 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
     }
-    @keyframes draw-eq {
-      to { stroke-dashoffset: 0; }
-    }
+    @keyframes draw-eq { to { stroke-dashoffset: 0; } }
 
     /* ============================================================
-       DOWNLOAD SECTION
+       DOWNLOAD
     ============================================================ */
     #download {
       padding: 120px 0;
       background: linear-gradient(180deg, var(--bg-deepest) 0%, var(--bg-navy) 50%, var(--bg-deepest) 100%);
-      text-align: center;
-      position: relative; overflow: hidden;
+      text-align: center; position: relative; overflow: hidden;
     }
     .download-bg-glow {
       position: absolute; inset: 0;
@@ -465,78 +395,35 @@
       pointer-events: none;
     }
     .download-inner { position: relative; z-index: 1; }
-    .download-heading {
-      font-size: clamp(36px, 6vw, 64px); font-weight: 900; letter-spacing: -0.03em;
-      margin-bottom: 16px;
-    }
+    .download-heading { font-size: clamp(36px, 6vw, 64px); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 16px; }
     .download-heading em {
       font-style: normal;
       background: linear-gradient(135deg, var(--cyan) 0%, var(--mint) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .download-subtext {
-      font-size: 18px; color: var(--text-muted); margin-bottom: 52px;
-      max-width: 480px; margin-left: auto; margin-right: auto;
-    }
-    .download-buttons {
-      display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
-      margin-bottom: 40px;
-    }
+    .download-subtext { font-size: 18px; color: var(--text-muted); margin-bottom: 52px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .download-buttons { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
     .btn-dl-large {
       display: flex; align-items: center; gap: 12px;
-      padding: 20px 40px;
-      border-radius: var(--radius-pill);
-      font-size: 16px; font-weight: 700;
-      transition: var(--transition);
-      cursor: pointer; border: none;
+      padding: 20px 40px; border-radius: var(--radius-pill);
+      font-size: 16px; font-weight: 700; transition: var(--transition); cursor: pointer; border: none;
     }
-    .btn-dl-large-mac {
-      background: var(--cyan); color: #04111C;
-      box-shadow: 0 0 50px rgba(34,211,238,0.4), 0 8px 30px rgba(0,0,0,0.3);
-    }
-    .btn-dl-large-mac:hover {
-      background: #fff;
-      box-shadow: 0 0 70px rgba(34,211,238,0.6), 0 12px 40px rgba(0,0,0,0.4);
-      transform: translateY(-3px);
-    }
-    .btn-dl-large-win {
-      background: rgba(248,250,252,0.07);
-      color: var(--text-primary);
-      border: 1px solid rgba(248,250,252,0.2);
-      backdrop-filter: blur(12px);
-    }
-    .btn-dl-large-win:hover {
-      background: rgba(248,250,252,0.13);
-      border-color: var(--border-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 0 30px rgba(34,211,238,0.12);
-    }
+    .btn-dl-large-mac { background: var(--cyan); color: #04111C; box-shadow: 0 0 50px rgba(34,211,238,0.4), 0 8px 30px rgba(0,0,0,0.3); }
+    .btn-dl-large-mac:hover { background: #fff; box-shadow: 0 0 70px rgba(34,211,238,0.6), 0 12px 40px rgba(0,0,0,0.4); transform: translateY(-3px); }
+    .btn-dl-large-win { background: rgba(248,250,252,0.07); color: var(--text-primary); border: 1px solid rgba(248,250,252,0.2); backdrop-filter: blur(12px); }
+    .btn-dl-large-win:hover { background: rgba(248,250,252,0.13); border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 0 30px rgba(34,211,238,0.12); }
     .dl-os-icon { font-size: 22px; }
     .dl-info { text-align: left; }
-    .dl-info small {
-      display: block; font-size: 11px; opacity: 0.65; font-weight: 500;
-    }
+    .dl-info small { display: block; font-size: 11px; opacity: 0.65; font-weight: 500; }
     .download-warning {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 20px;
-      background: rgba(251,191,36,0.07);
-      border: 1px solid rgba(251,191,36,0.2);
-      border-radius: var(--radius-pill);
-      font-size: 13px; color: rgba(251,191,36,0.85);
+      background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.2);
+      border-radius: var(--radius-pill); font-size: 13px; color: rgba(251,191,36,0.85);
       margin-bottom: 48px;
     }
-    .requirements-grid {
-      display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
-    }
-    .req-item {
-      padding: 16px 24px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(8px);
-      text-align: left;
-    }
+    .requirements-grid { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .req-item { padding: 16px 24px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); backdrop-filter: blur(8px); text-align: left; }
     .req-item h5 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cyan); margin-bottom: 6px; }
     .req-item ul { list-style: none; }
     .req-item li { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
@@ -545,32 +432,22 @@
     /* ============================================================
        CREATOR
     ============================================================ */
-    #creator {
-      padding: 120px 0;
-      background: var(--bg-deepest);
-    }
-    .creator-inner {
-      max-width: 680px; margin: 0 auto; text-align: center;
-    }
+    #creator { padding: 120px 0; background: var(--bg-deepest); }
+    .creator-inner { max-width: 680px; margin: 0 auto; text-align: center; }
     .creator-avatar {
       width: 100px; height: 100px; border-radius: 50%;
       margin: 0 auto 28px;
-      background: linear-gradient(135deg, var(--bg-navy) 0%, var(--bg-cosmic) 100%);
       border: 2px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 40px; font-weight: 900;
+      font-size: 38px; font-weight: 900;
       background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(45,212,191,0.1));
       box-shadow: 0 0 40px rgba(34,211,238,0.15);
-      letter-spacing: -2px;
-      color: var(--cyan);
+      letter-spacing: -2px; color: var(--cyan);
       position: relative;
     }
     .creator-avatar::after {
-      content: '';
-      position: absolute; inset: -8px;
-      border-radius: 50%;
-      background: transparent;
-      border: 1px solid rgba(34,211,238,0.2);
+      content: ''; position: absolute; inset: -8px; border-radius: 50%;
+      background: transparent; border: 1px solid rgba(34,211,238,0.2);
       animation: orbit-ring 8s linear infinite;
     }
     @keyframes orbit-ring {
@@ -578,61 +455,30 @@
       50% { opacity: 1; transform: rotate(180deg) scale(1.04); }
       to { transform: rotate(360deg) scale(1); opacity: 0.6; }
     }
-    .creator-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--cyan); margin-bottom: 12px;
-    }
-    .creator-name {
-      font-size: clamp(32px, 5vw, 48px); font-weight: 900; letter-spacing: -0.02em;
-      margin-bottom: 20px;
-    }
-    .creator-bio {
-      font-size: 17px; color: var(--text-muted); line-height: 1.8; margin-bottom: 36px;
-    }
+    .creator-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 12px; }
+    .creator-name { font-size: clamp(32px, 5vw, 48px); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .creator-bio { font-size: 17px; color: var(--text-muted); line-height: 1.8; margin-bottom: 36px; }
     .creator-bio strong { color: var(--text-primary); }
-    .creator-links {
-      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-    }
+    .creator-links { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
     .creator-link {
       display: flex; align-items: center; gap: 8px;
-      padding: 11px 22px;
-      border-radius: var(--radius-pill);
+      padding: 11px 22px; border-radius: var(--radius-pill);
       font-size: 14px; font-weight: 600;
-      border: 1px solid var(--border);
-      background: var(--bg-panel);
-      backdrop-filter: blur(12px);
-      transition: var(--transition);
-      color: var(--text-muted);
+      border: 1px solid var(--border); background: var(--bg-panel);
+      backdrop-filter: blur(12px); transition: var(--transition); color: var(--text-muted);
     }
-    .creator-link:hover {
-      border-color: var(--border-hover);
-      color: var(--text-primary);
-      background: rgba(34,211,238,0.06);
-      transform: translateY(-2px);
-    }
+    .creator-link:hover { border-color: var(--border-hover); color: var(--text-primary); background: rgba(34,211,238,0.06); transform: translateY(-2px); }
 
     /* ============================================================
        FOOTER
     ============================================================ */
-    #footer {
-      padding: 40px 0;
-      border-top: 1px solid var(--border);
-      background: var(--bg-deepest);
-    }
-    .footer-inner {
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
-    }
-    .footer-brand {
-      display: flex; align-items: center; gap: 10px;
-    }
+    #footer { padding: 40px 0; border-top: 1px solid var(--border); background: var(--bg-deepest); }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
     .footer-logo { width: 28px; height: 28px; opacity: 0.75; }
     .footer-copyright { font-size: 13px; color: var(--text-faint); }
-    .footer-links {
-      display: flex; gap: 24px;
-    }
-    .footer-links a {
-      font-size: 13px; color: var(--text-faint); transition: var(--transition);
-    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--text-faint); transition: var(--transition); }
     .footer-links a:hover { color: var(--cyan); }
 
     /* ============================================================
@@ -663,12 +509,12 @@
         <span class="nav-name">ASTRA Audio</span>
       </a>
       <ul class="nav-links">
-        <li><a href="#about">About</a></li>
+        <li><a href="#about">Sobre</a></li>
         <li><a href="#plugins">Plugins</a></li>
         <li><a href="#download">Download</a></li>
-        <li><a href="#creator">Creator</a></li>
+        <li><a href="#creator">Criador</a></li>
         <li>
-          <a id="nav-cta-btn" href="#download" class="nav-cta">Free Beta ↓</a>
+          <a id="nav-cta-btn" href="#download" class="nav-cta">Beta Grátis ↓</a>
         </li>
       </ul>
     </div>
@@ -679,30 +525,30 @@
     <canvas id="hero-canvas"></canvas>
     <div class="hero-bg-gradient"></div>
     <div class="hero-content">
-      <p class="hero-eyebrow">ASTRA Audio Suite — Private Beta</p>
+      <p class="hero-eyebrow">ASTRA Audio Suite — Beta Privado</p>
       <div class="hero-icon-wrap">
         <div class="hero-icon-glow"></div>
-        <img src="assets/astra-icon.svg" alt="ASTRA Audio Suite icon" />
+        <img src="assets/astra-icon.svg" alt="Ícone ASTRA Audio Suite" />
       </div>
       <h1 class="hero-title">
         <span class="word-highlight" id="typing-target"></span>
       </h1>
       <p class="hero-subtitle">
-        Precision audio plugins for modern mixing engineers.<br/>
-        Built from first principles. No compromises.
+        Plugins de áudio de precisão para engenheiros de mixagem modernos.<br/>
+        Desenvolvido do zero, sem atalhos.
       </p>
       <div class="hero-buttons">
         <a id="hero-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-primary">
-          <span>🍎</span> Download for macOS
+          <span>🍎</span> Baixar para macOS
         </a>
         <a id="hero-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-secondary">
-          <span>🪟</span> Download for Windows
+          <span>🪟</span> Baixar para Windows
         </a>
       </div>
-      <p class="hero-version-tag">v<span>0.9.0</span> RC1 · AUREQ Parametric EQ · Free Beta</p>
+      <p class="hero-version-tag">v<span>0.9.0</span> RC1 · AUREQ EQ Paramétrico · Beta Gratuito</p>
     </div>
     <div class="scroll-indicator">
-      <span>scroll</span>
+      <span>rolar</span>
       <div class="scroll-arrow"></div>
     </div>
   </section>
@@ -712,31 +558,31 @@
     <div class="container">
       <div class="about-inner reveal">
         <div class="about-text">
-          <p class="section-label">About ASTRA Audio</p>
-          <h2 class="about-heading">Precision tools.<br/>No compromises.</h2>
+          <p class="section-label">Sobre a ASTRA Audio</p>
+          <h2 class="about-heading">Ferramentas de precisão.<br/>Sem concessões.</h2>
           <p class="about-body">
-            ASTRA Audio is a suite of professional VST3 plugins crafted for audio engineers who demand surgical precision. Every algorithm is built from first principles, every interface designed to remove friction between the engineer and the sound.
+            ASTRA Audio é uma suíte de plugins VST3 profissionais desenvolvida para engenheiros de áudio que exigem precisão cirúrgica. Cada algoritmo foi construído do zero, cada interface projetada para eliminar fricção entre o engenheiro e o som.
           </p>
           <div class="about-features">
             <div class="about-feature">
               <div class="feature-icon">⚡</div>
               <div class="feature-text">
-                <h4>DSP from First Principles</h4>
-                <p>Biquad algorithms hand-tuned for accuracy. No black boxes.</p>
+                <h4>DSP Construído do Zero</h4>
+                <p>Algoritmos biquad ajustados manualmente para máxima precisão. Sem caixa preta.</p>
               </div>
             </div>
             <div class="about-feature">
               <div class="feature-icon">🎯</div>
               <div class="feature-text">
-                <h4>Zero Visual Noise</h4>
-                <p>Interfaces that get out of your way. Focus on the mix.</p>
+                <h4>Interface Sem Ruído Visual</h4>
+                <p>Interfaces que saem do seu caminho. Foco total na mixagem.</p>
               </div>
             </div>
             <div class="about-feature">
               <div class="feature-icon">🌌</div>
               <div class="feature-text">
-                <h4>Consistent Suite Identity</h4>
-                <p>Every ASTRA plugin feels like home — same language, same flow.</p>
+                <h4>Identidade de Suíte Consistente</h4>
+                <p>Todo plugin ASTRA tem a mesma linguagem, o mesmo fluxo — parece casa.</p>
               </div>
             </div>
           </div>
@@ -744,7 +590,7 @@
         <div class="about-visual">
           <div class="about-orbit-glow"></div>
           <div class="about-orbit-wrap">
-            <img src="assets/astra-icon.svg" alt="ASTRA orbital icon" />
+            <img src="assets/astra-icon.svg" alt="Ícone orbital ASTRA" />
           </div>
         </div>
       </div>
@@ -755,22 +601,22 @@
   <section id="plugins">
     <div class="container">
       <div class="plugins-header reveal">
-        <p class="section-label">The Collection</p>
-        <h2 class="plugins-title">Professional tools for every stage.</h2>
-        <p class="plugins-subtitle">One plugin available now. More precision tools coming.</p>
+        <p class="section-label">A Coleção</p>
+        <h2 class="plugins-title">Ferramentas profissionais para cada etapa.</h2>
+        <p class="plugins-subtitle">Um plugin disponível agora. Mais ferramentas de precisão chegando em breve.</p>
       </div>
       <div class="plugins-grid">
 
-        <!-- AUREQ — AVAILABLE -->
+        <!-- AUREQ — DISPONÍVEL -->
         <div class="plugin-card available reveal">
           <div class="plugin-card-glow"></div>
-          <img src="assets/aureq-icon.svg" alt="AUREQ icon" class="plugin-icon" />
+          <img src="assets/aureq-icon.svg" alt="Ícone AUREQ" class="plugin-icon" />
           <div class="plugin-badge">
-            <span class="badge badge-available"><span class="pulse-dot"></span> Available Now</span>
+            <span class="badge badge-available"><span class="pulse-dot"></span> Disponível Agora</span>
           </div>
           <h3 class="plugin-name">AUREQ</h3>
-          <p class="plugin-name-sub">Parametric Equalizer</p>
-          <!-- Animated EQ curve -->
+          <p class="plugin-name-sub">Equalizador Paramétrico</p>
+          <!-- Curva de EQ animada -->
           <svg class="eq-curve-animated" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:40px;margin-bottom:16px;">
             <path d="M4,50 C40,50 70,48 95,32 C110,20 120,4 120,4 C120,4 130,20 145,32 C170,48 200,50 236,50" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" fill="none"/>
             <circle cx="120" cy="4" r="4" fill="#22D3EE" filter="url(#glow-f)"/>
@@ -781,50 +627,50 @@
               </filter>
             </defs>
           </svg>
-          <p class="plugin-desc">8-band precision parametric EQ with dynamic bands, realtime spectrum analyzer, and a factory preset library built for professional mix sessions.</p>
+          <p class="plugin-desc">EQ paramétrico de 8 bandas com bandas dinâmicas, analisador de espectro em tempo real e biblioteca de presets de fábrica para sessões de mixagem profissional.</p>
           <div class="plugin-download-buttons">
             <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-dl-mac">
-              🍎 macOS Download
+              🍎 Baixar para macOS
             </a>
             <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-dl-win">
-              🪟 Windows Download
+              🪟 Baixar para Windows
             </a>
           </div>
           <div class="plugin-specs">
-            <div class="spec-item"><strong>Format</strong>VST3</div>
-            <div class="spec-item"><strong>Version</strong>0.9.0 RC1</div>
-            <div class="spec-item"><strong>Bands</strong>8 bands</div>
+            <div class="spec-item"><strong>Formato</strong>VST3</div>
+            <div class="spec-item"><strong>Versão</strong>0.9.0 RC1</div>
+            <div class="spec-item"><strong>Bandas</strong>8 bandas</div>
           </div>
         </div>
 
         <!-- GRAVITY COMP -->
         <div class="plugin-card coming reveal">
           <h3 class="plugin-name">GRAVITY</h3>
-          <p class="plugin-name-sub">Dynamic Compressor</p>
+          <p class="plugin-name-sub">Compressor Dinâmico</p>
           <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Coming Soon</span>
+            <span class="badge badge-coming">Em Breve</span>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Transparent multiband compression with sidechain control and adaptive threshold. Gravity pulls dynamics into place.</p>
+          <p class="plugin-desc" style="margin-top:16px;">Compressão multibanda transparente com controle de sidechain e threshold adaptativo. A gravidade coloca a dinâmica no lugar.</p>
         </div>
 
         <!-- NEBULA SAT -->
         <div class="plugin-card coming reveal">
           <h3 class="plugin-name">NEBULA</h3>
-          <p class="plugin-name-sub">Harmonic Saturator</p>
+          <p class="plugin-name-sub">Saturador Harmônico</p>
           <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Coming Soon</span>
+            <span class="badge badge-coming">Em Breve</span>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Add harmonic warmth and analog character. Tape, tube, and transistor saturation modes with per-band control.</p>
+          <p class="plugin-desc" style="margin-top:16px;">Adicione calor e caráter analógico. Modos de saturação tape, tubo e transistor com controle por banda.</p>
         </div>
 
         <!-- EVENT LIMITER -->
         <div class="plugin-card coming reveal">
           <h3 class="plugin-name">EVENT</h3>
-          <p class="plugin-name-sub">Mastering Limiter</p>
+          <p class="plugin-name-sub">Limiter de Masterização</p>
           <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Coming Soon</span>
+            <span class="badge badge-coming">Em Breve</span>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Transparent brickwall limiting for mastering sessions. Lookahead algorithm prevents inter-sample peaks with zero artifacts.</p>
+          <p class="plugin-desc" style="margin-top:16px;">Limiting transparente para sessões de masterização. Algoritmo lookahead previne inter-sample peaks sem artefatos.</p>
         </div>
 
       </div>
@@ -836,56 +682,56 @@
     <div class="download-bg-glow"></div>
     <div class="container download-inner">
       <div class="reveal">
-        <p class="section-label" style="text-align:center;">Free Download</p>
-        <h2 class="download-heading">Get <em>AUREQ</em><br/>today. Free.</h2>
-        <p class="download-subtext">Private beta release. Available for macOS and Windows. VST3 format, ready for your DAW.</p>
+        <p class="section-label" style="text-align:center;">Download Gratuito</p>
+        <h2 class="download-heading">Baixe o <em>AUREQ</em><br/>agora. Grátis.</h2>
+        <p class="download-subtext">Versão beta privada. Disponível para macOS e Windows. Formato VST3, pronto para a sua DAW.</p>
         <div class="download-buttons">
           <a id="dl-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-dl-large btn-dl-large-mac">
             <span class="dl-os-icon">🍎</span>
             <div class="dl-info">
-              <span>Download for macOS</span>
-              <small>macOS 10.15+ · Apple Silicon & Intel · DMG</small>
+              <span>Baixar para macOS</span>
+              <small>macOS 10.15+ · Apple Silicon e Intel · DMG</small>
             </div>
           </a>
           <a id="dl-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-dl-large btn-dl-large-win">
             <span class="dl-os-icon">🪟</span>
             <div class="dl-info">
-              <span>Download for Windows</span>
-              <small>Windows 10+ 64-bit · Installer EXE</small>
+              <span>Baixar para Windows</span>
+              <small>Windows 10+ 64-bit · Instalador EXE</small>
             </div>
           </a>
         </div>
         <div style="display:flex;justify-content:center;margin-bottom:48px;">
           <div class="download-warning">
-            ⚠ Beta unsigned binary — macOS: right-click › Open &nbsp;|&nbsp; Windows: More Info › Run anyway
+            ⚠ Beta sem assinatura digital — macOS: clique direito › Abrir &nbsp;|&nbsp; Windows: Mais Informações › Executar assim mesmo
           </div>
         </div>
         <div class="requirements-grid">
           <div class="req-item">
-            <h5>macOS Requirements</h5>
+            <h5>Requisitos macOS</h5>
             <ul>
-              <li>macOS 10.15 Catalina or later</li>
-              <li>Apple Silicon or Intel 64-bit</li>
-              <li>VST3-compatible DAW</li>
-              <li>8 GB RAM recommended</li>
+              <li>macOS 10.15 Catalina ou superior</li>
+              <li>Apple Silicon ou Intel 64-bit</li>
+              <li>DAW compatível com VST3</li>
+              <li>8 GB de RAM recomendado</li>
             </ul>
           </div>
           <div class="req-item">
-            <h5>Windows Requirements</h5>
+            <h5>Requisitos Windows</h5>
             <ul>
-              <li>Windows 10 64-bit or later</li>
-              <li>x64 processor</li>
-              <li>VST3-compatible DAW</li>
-              <li>8 GB RAM recommended</li>
+              <li>Windows 10 64-bit ou superior</li>
+              <li>Processador x64</li>
+              <li>DAW compatível com VST3</li>
+              <li>8 GB de RAM recomendado</li>
             </ul>
           </div>
           <div class="req-item">
-            <h5>Tested DAWs</h5>
+            <h5>DAWs Testadas</h5>
             <ul>
               <li>FL Studio 21+</li>
               <li>Ableton Live 11+</li>
               <li>Reaper 6+</li>
-              <li>Logic Pro (macOS)</li>
+              <li>Logic Pro (somente macOS)</li>
             </ul>
           </div>
         </div>
@@ -898,19 +744,18 @@
     <div class="container">
       <div class="creator-inner reveal">
         <div class="creator-avatar">SF</div>
-        <p class="creator-label">Created by</p>
+        <p class="creator-label">Criado por</p>
         <h2 class="creator-name">Sidy Furtado</h2>
         <p class="creator-bio">
-          All <strong>ASTRA Audio</strong> plugins are crafted by <strong>Sidy Furtado</strong>, an audio engineer and developer dedicated to building precision tools for music production. Every algorithm, every interaction, every pixel is considered with the working mix engineer in mind.
+          Todos os plugins da <strong>ASTRA Audio</strong> são desenvolvidos por <strong>Sidy Furtado</strong>, engenheiro de áudio e desenvolvedor dedicado a construir ferramentas de precisão para produção musical. Cada algoritmo, cada interação, cada pixel é pensado com o engenheiro de mixagem em mente.
         </p>
         <div class="creator-links">
           <a id="creator-github-link" href="https://github.com/SidyFurtado" class="creator-link" target="_blank" rel="noopener noreferrer">
-            <!-- GitHub SVG icon -->
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
             github.com/SidyFurtado
           </a>
           <a id="creator-release-link" href="https://github.com/SidyFurtado/VST-Project/releases" class="creator-link" target="_blank" rel="noopener noreferrer">
-            📦 All Releases
+            📦 Todos os Releases
           </a>
         </div>
       </div>
@@ -922,7 +767,7 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <img src="assets/astra-icon.svg" alt="ASTRA Audio" class="footer-logo" />
-        <span class="footer-copyright">© 2026 ASTRA Audio — Sidy Furtado. All rights reserved.</span>
+        <span class="footer-copyright">© 2026 ASTRA Audio — Sidy Furtado. Todos os direitos reservados.</span>
       </div>
       <div class="footer-links">
         <a href="https://github.com/SidyFurtado/VST-Project" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -934,31 +779,18 @@
 
   <!-- ==================== SCRIPTS ==================== -->
   <script>
-    /* --- Star particle canvas --- */
+    /* --- Partículas de estrelas --- */
     (function() {
       const canvas = document.getElementById('hero-canvas');
       const ctx = canvas.getContext('2d');
       let W, H, stars = [];
-
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
-
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
       function createStars(n) {
         stars = [];
         for (let i = 0; i < n; i++) {
-          stars.push({
-            x: Math.random() * W,
-            y: Math.random() * H,
-            r: Math.random() * 1.4 + 0.3,
-            alpha: Math.random(),
-            speed: Math.random() * 0.008 + 0.002,
-            phase: Math.random() * Math.PI * 2,
-          });
+          stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.4 + 0.3, alpha: Math.random(), speed: Math.random() * 0.008 + 0.002, phase: Math.random() * Math.PI * 2 });
         }
       }
-
       function draw(t) {
         ctx.clearRect(0, 0, W, H);
         stars.forEach(s => {
@@ -970,25 +802,23 @@
         });
         requestAnimationFrame(draw);
       }
-
       resize();
       createStars(90);
       window.addEventListener('resize', () => { resize(); createStars(90); });
       requestAnimationFrame(draw);
     })();
 
-    /* --- Typing effect --- */
+    /* --- Efeito de digitação --- */
     (function() {
       const el = document.getElementById('typing-target');
-      const words = ['Professional', 'Precision', 'Professional'];
-      const text = 'Professional Audio Tools.';
+      const text = 'Ferramentas de Áudio Profissionais.';
       let i = 0;
       el.textContent = '';
       function type() {
         if (i <= text.length) {
           el.textContent = text.slice(0, i);
           i++;
-          setTimeout(type, i < 14 ? 70 : 55);
+          setTimeout(type, i < 20 ? 65 : 50);
         }
       }
       setTimeout(type, 400);
@@ -997,22 +827,15 @@
     /* --- Scroll reveal --- */
     (function() {
       const obs = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            obs.unobserve(e.target);
-          }
-        });
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
       }, { threshold: 0.12 });
       document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     })();
 
-    /* --- Nav shadow on scroll --- */
+    /* --- Sombra do nav ao rolar --- */
     window.addEventListener('scroll', () => {
       const nav = document.getElementById('nav');
-      nav.style.boxShadow = window.scrollY > 20
-        ? '0 4px 30px rgba(0,0,0,0.5)'
-        : 'none';
+      nav.style.boxShadow = window.scrollY > 20 ? '0 4px 30px rgba(0,0,0,0.5)' : 'none';
     });
   </script>
 
