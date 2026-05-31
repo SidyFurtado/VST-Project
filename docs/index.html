@@ -79,23 +79,25 @@
     }
     .btn-dl-mac-luminar {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 18px;
+      padding: 12px 12px;
       border-radius: var(--radius-pill);
-      font-size: 13px; font-weight: 700;
+      font-size: 12px; font-weight: 700;
       transition: var(--transition);
       cursor: pointer; border: none;
       background: var(--amber); color: #04111C; box-shadow: 0 0 20px rgba(246, 201, 14, 0.3);
+      flex: 1;
     }
     .btn-dl-mac-luminar:hover { background: #fff; box-shadow: 0 0 30px rgba(246, 201, 14, 0.5); transform: translateY(-1px); }
     
     .btn-dl-win-luminar {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 18px;
+      padding: 12px 12px;
       border-radius: var(--radius-pill);
-      font-size: 13px; font-weight: 700;
+      font-size: 12px; font-weight: 700;
       transition: var(--transition);
-      cursor: pointer;
+      cursor: pointer; border: none;
       background: rgba(248, 250, 252, 0.07); color: var(--text-primary); border: 1px solid rgba(248, 250, 252, 0.15);
+      flex: 1;
     }
     .btn-dl-win-luminar:hover { background: rgba(248, 250, 252, 0.13); border-color: var(--border-hover-amber); transform: translateY(-1px); }
     
@@ -427,14 +429,15 @@
     .plugin-name { font-size: 26px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 6px; }
     .plugin-name-sub { font-size: 12px; font-weight: 600; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
     .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 28px; }
-    .plugin-download-buttons { display: flex; flex-direction: column; gap: 10px; }
+    .plugin-download-buttons { display: flex; gap: 10px; }
     .btn-dl-mac, .btn-dl-win {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 18px;
+      padding: 12px 12px;
       border-radius: var(--radius-pill);
-      font-size: 13px; font-weight: 700;
+      font-size: 12px; font-weight: 700;
       transition: var(--transition);
       cursor: pointer; border: none;
+      flex: 1;
     }
     .btn-dl-mac { background: var(--cyan); color: #04111C; box-shadow: 0 0 20px rgba(34,211,238,0.3); }
     .btn-dl-mac:hover { background: #fff; box-shadow: 0 0 30px rgba(34,211,238,0.5); transform: translateY(-1px); }
@@ -695,10 +698,10 @@
           <p class="plugin-desc">EQ paramétrico de 8 bandas com bandas dinâmicas, analisador de espectro em tempo real e biblioteca de presets de fábrica para sessões de mixagem profissional.</p>
           <div class="plugin-download-buttons">
             <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-macOS.pkg" class="btn-dl-mac">
-              🍎 Baixar para macOS
+              🍎 macOS
             </a>
             <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-win">
-              🪟 Baixar para Windows
+              🪟 Windows
             </a>
           </div>
           <div class="plugin-specs">
@@ -760,10 +763,10 @@
           <p class="plugin-desc">Enhancer de altas frequências paralelo com Presence, Air e Texture Layer. Adicione ar, clareza e brilho analógico premium sem esforço.</p>
           <div class="plugin-download-buttons">
             <a id="card-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-macOS.pkg" class="btn-dl-mac-luminar">
-              🍎 Baixar para macOS
+              🍎 macOS
             </a>
             <a id="card-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-win-luminar">
-              🪟 Baixar para Windows
+              🪟 Windows
             </a>
           </div>
           <div class="plugin-specs">
