@@ -32,7 +32,10 @@ add_subdirectory(plugins/01_EQ)
 # Incluir o subdiretório de testes unitários do DSP (Fase 5.21)
 add_subdirectory(tests)
 
+# Segundo plugin da ASTRA Audio Suite — LUMINAR (High-Frequency Enhancer)
+add_subdirectory(plugins/02_AIR)
+
 # Placeholders para inclusão futura dos próximos plugins
-# add_subdirectory(plugins/02_Compressor)
+# add_subdirectory(plugins/02_Compressor)   # compressor — fase futura
 # add_subdirectory(plugins/03_Saturation)
 # add_subdirectory(plugins/04_Limiter)

@@ -41,6 +41,74 @@
       --shadow-glow:  0 0 60px rgba(34,211,238,0.18), 0 0 120px rgba(34,211,238,0.08);
       --transition:   all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    
+    /* LUMINAR Theme Customizations */
+    :root {
+      --amber:        #F6C90E;
+      --amber-dim:    rgba(246, 201, 14, 0.35);
+      --amber-glow:   rgba(246, 201, 14, 0.15);
+      --border-amber: rgba(246, 201, 14, 0.14);
+      --border-hover-amber: rgba(246, 201, 14, 0.4);
+    }
+    
+    .plugin-card.luminar-theme.available {
+      border-color: rgba(246, 201, 14, 0.25);
+      box-shadow: 0 0 40px rgba(246, 201, 14, 0.08), inset 0 1px 0 rgba(246, 201, 14, 0.1);
+    }
+    .plugin-card.luminar-theme.available:hover {
+      border-color: rgba(246, 201, 14, 0.5);
+      box-shadow: 0 0 60px rgba(246, 201, 14, 0.15), 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .plugin-card.luminar-theme .plugin-card-glow {
+      background: radial-gradient(circle, rgba(246, 201, 14, 0.12) 0%, transparent 70%);
+    }
+    .plugin-card.luminar-theme .plugin-name-sub {
+      color: var(--amber);
+    }
+    .plugin-card.luminar-theme .badge-available {
+      background: rgba(246, 201, 14, 0.12);
+      border: 1px solid rgba(246, 201, 14, 0.3);
+      color: var(--amber);
+    }
+    .plugin-card.luminar-theme .pulse-dot {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+    .plugin-card.luminar-theme .plugin-icon {
+      filter: drop-shadow(0 0 12px rgba(246, 201, 14, 0.3));
+    }
+    .btn-dl-mac-luminar {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 700;
+      transition: var(--transition);
+      cursor: pointer; border: none;
+      background: var(--amber); color: #04111C; box-shadow: 0 0 20px rgba(246, 201, 14, 0.3);
+    }
+    .btn-dl-mac-luminar:hover { background: #fff; box-shadow: 0 0 30px rgba(246, 201, 14, 0.5); transform: translateY(-1px); }
+    
+    .btn-dl-win-luminar {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 700;
+      transition: var(--transition);
+      cursor: pointer;
+      background: rgba(248, 250, 252, 0.07); color: var(--text-primary); border: 1px solid rgba(248, 250, 252, 0.15);
+    }
+    .btn-dl-win-luminar:hover { background: rgba(248, 250, 252, 0.13); border-color: var(--border-hover-amber); transform: translateY(-1px); }
+    
+    .btn-dl-large-mac-luminar { background: var(--amber); color: #04111C; box-shadow: 0 0 50px rgba(246, 201, 14, 0.4), 0 8px 30px rgba(0,0,0,0.3); }
+    .btn-dl-large-mac-luminar:hover { background: #fff; box-shadow: 0 0 70px rgba(246, 201, 14, 0.6), 0 12px 40px rgba(0,0,0,0.4); transform: translateY(-3px); }
+    
+    .btn-dl-large-win-luminar { background: rgba(248, 250, 252, 0.07); color: var(--text-primary); border: 1px solid rgba(248, 250, 252, 0.2); backdrop-filter: blur(12px); }
+    .btn-dl-large-win-luminar:hover { background: rgba(248, 250, 252, 0.13); border-color: var(--border-hover-amber); transform: translateY(-3px); box-shadow: 0 0 30px rgba(246, 201, 14, 0.12); }
+    
+    @media (max-width: 860px) {
+      .download-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+    }
+    
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--font);
@@ -538,14 +606,11 @@
         Desenvolvido do zero, sem atalhos.
       </p>
       <div class="hero-buttons">
-        <a id="hero-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-primary">
-          <span>🍎</span> Baixar para macOS
-        </a>
-        <a id="hero-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-secondary">
-          <span>🪟</span> Baixar para Windows
+        <a id="hero-btn-download" href="#download" class="btn-primary">
+          ⚡ Baixar Plugins da Suíte
         </a>
       </div>
-      <p class="hero-version-tag">v<span>0.9.0</span> RC1 · AUREQ EQ Paramétrico · Beta Gratuito</p>
+      <p class="hero-version-tag">ASTRA Audio Suite v1.0.0 &middot; AUREQ &amp; LUMINAR &middot; Beta Gratuito</p>
     </div>
     <div class="scroll-indicator">
       <span>rolar</span>
@@ -603,7 +668,7 @@
       <div class="plugins-header reveal">
         <p class="section-label">A Coleção</p>
         <h2 class="plugins-title">Ferramentas profissionais para cada etapa.</h2>
-        <p class="plugins-subtitle">Um plugin disponível agora. Mais ferramentas de precisão chegando em breve.</p>
+        <p class="plugins-subtitle">Dois plugins disponíveis agora. Mais ferramentas de precisão chegando em breve.</p>
       </div>
       <div class="plugins-grid">
 
@@ -629,17 +694,82 @@
           </svg>
           <p class="plugin-desc">EQ paramétrico de 8 bandas com bandas dinâmicas, analisador de espectro em tempo real e biblioteca de presets de fábrica para sessões de mixagem profissional.</p>
           <div class="plugin-download-buttons">
-            <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-dl-mac">
+            <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-macOS.pkg" class="btn-dl-mac">
               🍎 Baixar para macOS
             </a>
-            <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-dl-win">
+            <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-win">
               🪟 Baixar para Windows
             </a>
           </div>
           <div class="plugin-specs">
-            <div class="spec-item"><strong>Formato</strong>VST3</div>
-            <div class="spec-item"><strong>Versão</strong>0.9.0 RC1</div>
+            <div class="spec-item"><strong>Formato</strong>VST3, APP</div>
+            <div class="spec-item"><strong>Versão</strong>1.0.0</div>
             <div class="spec-item"><strong>Bandas</strong>8 bandas</div>
+          </div>
+        </div>
+
+        <!-- LUMINAR — DISPONÍVEL -->
+        <div class="plugin-card luminar-theme available reveal">
+          <div class="plugin-card-glow"></div>
+          <!-- Inline LUMINAR Icon -->
+          <svg class="plugin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="72" height="72" style="margin-bottom: 20px;">
+            <defs>
+              <radialGradient id="luminar-bg-grad" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="#0B0F12" />
+                <stop offset="100%" stop-color="#0D1F35" />
+              </radialGradient>
+              <radialGradient id="luminar-node-grad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="60%" stop-color="#F6C90E" />
+                <stop offset="100%" stop-color="#CA8A04" />
+              </radialGradient>
+              <radialGradient id="luminar-node-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(246, 201, 14, 0.6)" />
+                <stop offset="100%" stop-color="rgba(246, 201, 14, 0)" />
+              </radialGradient>
+              <radialGradient id="luminar-aurora-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(246, 201, 14, 0.25)" />
+                <stop offset="100%" stop-color="rgba(246, 201, 14, 0)" />
+              </radialGradient>
+              <filter id="luminar-glass-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+              </filter>
+            </defs>
+            <rect x="0" y="0" width="1024" height="1024" rx="230" fill="url(#luminar-bg-grad)" />
+            <ellipse cx="768" cy="300" rx="350" ry="250" fill="url(#luminar-aurora-grad)" />
+            <path d="M 128,768 L 450,768 C 550,768 650,300 768,300 L 896,300" fill="none" stroke="#F6C90E" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#luminar-glass-shadow)" />
+            <circle cx="768" cy="300" r="160" fill="url(#luminar-node-glow)" />
+            <circle cx="768" cy="300" r="56" fill="url(#luminar-node-grad)" filter="url(#luminar-glass-shadow)" />
+          </svg>
+          <div class="plugin-badge">
+            <span class="badge badge-available"><span class="pulse-dot"></span> Disponível Agora</span>
+          </div>
+          <h3 class="plugin-name">LUMINAR</h3>
+          <p class="plugin-name-sub">Air Exciter</p>
+          <!-- Curva de High-Shelf animada -->
+          <svg class="eq-curve-animated" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:40px;margin-bottom:16px;">
+            <path d="M4,50 L100,50 C130,50 150,15 180,15 L236,15" stroke="#F6C90E" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="175" cy="15" r="4" fill="#F6C90E" filter="url(#glow-amber)"/>
+            <defs>
+              <filter id="glow-amber" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+          <p class="plugin-desc">Enhancer de altas frequências paralelo com Presence, Air e Texture Layer. Adicione ar, clareza e brilho analógico premium sem esforço.</p>
+          <div class="plugin-download-buttons">
+            <a id="card-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-macOS.pkg" class="btn-dl-mac-luminar">
+              🍎 Baixar para macOS
+            </a>
+            <a id="card-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-win-luminar">
+              🪟 Baixar para Windows
+            </a>
+          </div>
+          <div class="plugin-specs">
+            <div class="spec-item"><strong>Formato</strong>VST3, APP</div>
+            <div class="spec-item"><strong>Versão</strong>1.0.0</div>
+            <div class="spec-item"><strong>Bandas</strong>3 Knobs</div>
           </div>
         </div>
 
@@ -683,24 +813,57 @@
     <div class="container download-inner">
       <div class="reveal">
         <p class="section-label" style="text-align:center;">Download Gratuito</p>
-        <h2 class="download-heading">Baixe o <em>AUREQ</em><br/>agora. Grátis.</h2>
-        <p class="download-subtext">Versão beta privada. Disponível para macOS e Windows. Formato VST3, pronto para a sua DAW.</p>
-        <div class="download-buttons">
-          <a id="dl-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg" class="btn-dl-large btn-dl-large-mac">
-            <span class="dl-os-icon">🍎</span>
-            <div class="dl-info">
-              <span>Baixar para macOS</span>
-              <small>macOS 10.15+ · Apple Silicon e Intel · DMG</small>
+        <h2 class="download-heading">Baixe a <em>ASTRA Suite</em><br/>agora. Grátis.</h2>
+        <p class="download-subtext">Versão beta privada. Disponível para macOS e Windows. Formato VST3 e Standalone, prontos para a sua DAW.</p>
+        
+        <div class="download-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 52px; text-align: left;">
+          
+          <!-- AUREQ Download Box -->
+          <div class="download-box" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px; backdrop-filter: blur(12px);">
+            <h3 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; color: var(--cyan);">AUREQ EQ Paramétrico</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 28px;">Equalizador cirúrgico de 8 bandas com analisador em tempo real e Dynamic EQ.</p>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <a id="dl-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-macOS.pkg" class="btn-dl-large btn-dl-large-mac" style="width: 100%;">
+                <span class="dl-os-icon">🍎</span>
+                <div class="dl-info">
+                  <span>Baixar para macOS</span>
+                  <small>macOS 10.15+ &middot; Apple Silicon &amp; Intel &middot; PKG</small>
+                </div>
+              </a>
+              <a id="dl-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win" style="width: 100%;">
+                <span class="dl-os-icon">🪟</span>
+                <div class="dl-info">
+                  <span>Baixar para Windows</span>
+                  <small>Windows 10+ 64-bit &middot; Instalador EXE</small>
+                </div>
+              </a>
             </div>
-          </a>
-          <a id="dl-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v0.9.0-rc1/AUREQ-0.9.0-rc1-Windows-plugin-only-setup.exe" class="btn-dl-large btn-dl-large-win">
-            <span class="dl-os-icon">🪟</span>
-            <div class="dl-info">
-              <span>Baixar para Windows</span>
-              <small>Windows 10+ 64-bit · Instalador EXE</small>
+          </div>
+
+          <!-- LUMINAR Download Box -->
+          <div class="download-box" style="background: var(--bg-panel); border: 1px solid var(--border-amber); border-radius: var(--radius-lg); padding: 40px; backdrop-filter: blur(12px);">
+            <h3 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; color: var(--amber);">LUMINAR Air Exciter</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 28px;">Enhancer paralelo de altas frequências com presença e ar de estúdio.</p>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <a id="dl-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-macOS.pkg" class="btn-dl-large btn-dl-large-mac-luminar" style="width: 100%;">
+                <span class="dl-os-icon">🍎</span>
+                <div class="dl-info">
+                  <span>Baixar para macOS</span>
+                  <small>macOS 10.15+ &middot; Apple Silicon &amp; Intel &middot; PKG</small>
+                </div>
+              </a>
+              <a id="dl-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-luminar" style="width: 100%;">
+                <span class="dl-os-icon">🪟</span>
+                <div class="dl-info">
+                  <span>Baixar para Windows</span>
+                  <small>Windows 10+ 64-bit &middot; Instalador EXE</small>
+                </div>
+              </a>
             </div>
-          </a>
+          </div>
+
         </div>
+
         <div style="display:flex;justify-content:center;margin-bottom:48px;">
           <div class="download-warning">
             ⚠ Beta sem assinatura digital — macOS: clique direito › Abrir &nbsp;|&nbsp; Windows: Mais Informações › Executar assim mesmo
@@ -767,7 +930,7 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <img src="assets/astra-icon.svg" alt="ASTRA Audio" class="footer-logo" />
-        <span class="footer-copyright">© 2026 ASTRA Audio — Sidy Furtado. Todos os direitos reservados.</span>
+        <span class="footer-copyright">&copy; 2026 ASTRA Audio &bull; Sidy Furtado. Todos os direitos reservados.</span>
       </div>
       <div class="footer-links">
         <a href="https://github.com/SidyFurtado/VST-Project" target="_blank" rel="noopener noreferrer">GitHub</a>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>AUREQ</title>
+    
+    <options customize="always" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    
+    <!-- UI Resources -->
+    <background file="background.png" alignment="bottomleft" scaling="none"/>
+    <welcome file="welcome.html"/>
+    <license file="license.html"/>
+    
+    <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
+    <pkg-ref id="br.com.sidyfurtado.aureq.standalone"/>
+    
+    <choices-outline>
+        <line choice="default">
+            <line choice="br.com.sidyfurtado.aureq.vst3"/>
+            <line choice="br.com.sidyfurtado.aureq.standalone"/>
+        </line>
+    </choices-outline>
+    
+    <choice id="default" title="AUREQ" description="AUREQ Suite Installation"/>
+    
+    <choice id="br.com.sidyfurtado.aureq.vst3" title="AUREQ VST3 Plug-in" description="Installs the VST3 plug-in to /Library/Audio/Plug-Ins/VST3" start_selected="true" required="true">
+        <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
+    </choice>
+    
+    <choice id="br.com.sidyfurtado.aureq.standalone" title="AUREQ Standalone" description="Installs the Standalone application to /Applications" start_selected="true">
+        <pkg-ref id="br.com.sidyfurtado.aureq.standalone"/>
+    </choice>
+    
+    <pkg-ref id="br.com.sidyfurtado.aureq.vst3" version="VERSION_PLACEHOLDER" onConclusion="none">AUREQ-VST3-component.pkg</pkg-ref>
+    <pkg-ref id="br.com.sidyfurtado.aureq.standalone" version="VERSION_PLACEHOLDER" onConclusion="none">AUREQ-Standalone-component.pkg</pkg-ref>
+</installer-gui-script>

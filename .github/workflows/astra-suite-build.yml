@@ -1,0 +1,332 @@
+name: Build ASTRA Audio Suite
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS Universal Binary
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set Version
+        shell: bash
+        run: |
+          VERSION="1.0.0"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build Release
+        run: |
+          cmake --build build --config Release --target AUREQ LUMINAR
+
+      - name: Stage Payloads
+        shell: bash
+        run: |
+          # Create macOS staging directories
+          mkdir -p installer/macOS/aureq/output
+          mkdir -p installer/macOS/aureq/staging/VST3
+          mkdir -p installer/macOS/aureq/staging/Standalone
+          
+          mkdir -p installer/macOS/luminar/output
+          mkdir -p installer/macOS/luminar/staging/VST3
+          mkdir -p installer/macOS/luminar/staging/Standalone
+          
+          # Find and copy AUREQ binaries
+          AUREQ_VST3=$(find build -type d -name "AUREQ.vst3" | head -n 1)
+          AUREQ_APP=$(find build -type d -name "AUREQ.app" | head -n 1)
+          
+          if [ -n "$AUREQ_VST3" ]; then
+            cp -R "$AUREQ_VST3" installer/macOS/aureq/staging/VST3/
+          else
+            echo "AUREQ.vst3 not found!" && exit 1
+          fi
+          
+          if [ -n "$AUREQ_APP" ]; then
+            cp -R "$AUREQ_APP" installer/macOS/aureq/staging/Standalone/
+          else
+            echo "AUREQ.app not found!" && exit 1
+          fi
+          
+          # Find and copy LUMINAR binaries
+          LUMINAR_VST3=$(find build -type d -name "LUMINAR.vst3" | head -n 1)
+          LUMINAR_APP=$(find build -type d -name "LUMINAR.app" | head -n 1)
+          
+          if [ -n "$LUMINAR_VST3" ]; then
+            cp -R "$LUMINAR_VST3" installer/macOS/luminar/staging/VST3/
+          else
+            echo "LUMINAR.vst3 not found!" && exit 1
+          fi
+          
+          if [ -n "$LUMINAR_APP" ]; then
+            cp -R "$LUMINAR_APP" installer/macOS/luminar/staging/Standalone/
+          else
+            echo "LUMINAR.app not found!" && exit 1
+          fi
+
+      - name: Build macOS PKG Installers
+        shell: bash
+        run: |
+          # 1. Package AUREQ VST3 & Standalone components
+          pkgbuild --identifier "br.com.sidyfurtado.aureq.vst3" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/VST3" \
+            --component "installer/macOS/aureq/staging/VST3/AUREQ.vst3" \
+            "installer/macOS/aureq/output/AUREQ-VST3-component.pkg"
+            
+          pkgbuild --identifier "br.com.sidyfurtado.aureq.standalone" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Applications" \
+            --component "installer/macOS/aureq/staging/Standalone/AUREQ.app" \
+            "installer/macOS/aureq/output/AUREQ-Standalone-component.pkg"
+
+          # 2. Build LUMINAR VST3 & Standalone components
+          pkgbuild --identifier "br.com.sidyfurtado.luminar.vst3" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/VST3" \
+            --component "installer/macOS/luminar/staging/VST3/LUMINAR.vst3" \
+            "installer/macOS/luminar/output/LUMINAR-VST3-component.pkg"
+            
+          pkgbuild --identifier "br.com.sidyfurtado.luminar.standalone" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Applications" \
+            --component "installer/macOS/luminar/staging/Standalone/LUMINAR.app" \
+            "installer/macOS/luminar/output/LUMINAR-Standalone-component.pkg"
+
+          # 3. Create macOS Distribution installers using productbuild
+          # Substitute the version in the Distribution.xml templates
+          sed "s/VERSION_PLACEHOLDER/${{ env.VERSION }}/g" installer/macOS/aureq/distribution/Distribution.xml > installer/macOS/aureq/output/Distribution.xml
+          sed "s/VERSION_PLACEHOLDER/${{ env.VERSION }}/g" installer/macOS/luminar/distribution/Distribution.xml > installer/macOS/luminar/output/Distribution.xml
+          
+          # Copy background image for resources
+          cp installer/macOS/plugin-only/resources/background.png installer/macOS/aureq/resources/background.png
+          cp installer/macOS/plugin-only/resources/background.png installer/macOS/luminar/resources/background.png
+
+          productbuild --distribution "installer/macOS/aureq/output/Distribution.xml" \
+            --package-path "installer/macOS/aureq/output" \
+            --resources "installer/macOS/aureq/resources" \
+            "installer/macOS/aureq/output/AUREQ-${{ env.VERSION }}-macOS.pkg"
+            
+          productbuild --distribution "installer/macOS/luminar/output/Distribution.xml" \
+            --package-path "installer/macOS/luminar/output" \
+            --resources "installer/macOS/luminar/resources" \
+            "installer/macOS/luminar/output/LUMINAR-${{ env.VERSION }}-macOS.pkg"
+
+      - name: Upload macOS AUREQ Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AUREQ-${{ env.VERSION }}-macOS
+          path: installer/macOS/aureq/output/AUREQ-${{ env.VERSION }}-macOS.pkg
+          if-no-files-found: error
+
+      - name: Upload macOS LUMINAR Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: LUMINAR-${{ env.VERSION }}-macOS
+          path: installer/macOS/luminar/output/LUMINAR-${{ env.VERSION }}-macOS.pkg
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows x64 Binary
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set Version
+        shell: pwsh
+        run: |
+          $version = "1.0.0"
+          if ("${{ github.ref }}" -like "refs/tags/v*") {
+            $version = "${{ github.ref_name }}".Substring(1)
+          }
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build Release
+        run: cmake --build build --config Release --target AUREQ LUMINAR AUREQ_FilterTests
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          $testExe = Get-ChildItem -Path build -Filter "AUREQ_FilterTests.exe" -Recurse -File | Select-Object -First 1
+          if ($testExe) {
+            Write-Host "Running tests from: $($testExe.FullName)"
+            & $testExe.FullName
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Tests failed!"
+              exit 1
+            }
+            Write-Host "All tests passed successfully."
+          } else {
+            Write-Error "AUREQ_FilterTests.exe not found!"
+            exit 1
+          }
+
+      - name: Locate and Stage Payloads
+        shell: pwsh
+        run: |
+          # Create staging directories
+          New-Item -ItemType Directory -Force -Path installer/Windows/aureq/staging/VST3
+          New-Item -ItemType Directory -Force -Path installer/Windows/aureq/staging/Standalone
+          New-Item -ItemType Directory -Force -Path installer/Windows/luminar/staging/VST3
+          New-Item -ItemType Directory -Force -Path installer/Windows/luminar/staging/Standalone
+          New-Item -ItemType Directory -Force -Path installer/Windows/aureq/output
+          New-Item -ItemType Directory -Force -Path installer/Windows/luminar/output
+          
+          # Find VST3 and Standalone for AUREQ
+          $aureqVst3 = Get-ChildItem -Path build -Filter "AUREQ.vst3" -Recurse -Directory | Select-Object -First 1
+          $aureqExe = Get-ChildItem -Path build -Filter "AUREQ.exe" -Recurse -File | Select-Object -First 1
+          
+          if ($aureqVst3) {
+            Copy-Item -Path $aureqVst3.FullName -Destination installer/Windows/aureq/staging/VST3/AUREQ.vst3 -Recurse -Force
+          } else {
+            Write-Error "AUREQ.vst3 not found!"
+            exit 1
+          }
+          
+          if ($aureqExe) {
+            Copy-Item -Path $aureqExe.FullName -Destination installer/Windows/aureq/staging/Standalone/AUREQ.exe -Force
+          } else {
+            Write-Error "AUREQ.exe not found!"
+            exit 1
+          }
+          
+          # Find VST3 and Standalone for LUMINAR
+          $luminarVst3 = Get-ChildItem -Path build -Filter "LUMINAR.vst3" -Recurse -Directory | Select-Object -First 1
+          $luminarExe = Get-ChildItem -Path build -Filter "LUMINAR.exe" -Recurse -File | Select-Object -First 1
+          
+          if ($luminarVst3) {
+            Copy-Item -Path $luminarVst3.FullName -Destination installer/Windows/luminar/staging/VST3/LUMINAR.vst3 -Recurse -Force
+          } else {
+            Write-Error "LUMINAR.vst3 not found!"
+            exit 1
+          }
+          
+          if ($luminarExe) {
+            Copy-Item -Path $luminarExe.FullName -Destination installer/Windows/luminar/staging/Standalone/LUMINAR.exe -Force
+          } else {
+            Write-Error "LUMINAR.exe not found!"
+            exit 1
+          }
+
+      - name: Compile Inno Setup Installers
+        run: |
+          iscc /DMyAppVersion=${{ env.VERSION }} /DMyOutputBaseFilename=AUREQ-${{ env.VERSION }}-Windows-Setup installer/Windows/aureq/scripts/AUREQ-installer.iss
+          iscc /DMyAppVersion=${{ env.VERSION }} /DMyOutputBaseFilename=LUMINAR-${{ env.VERSION }}-Windows-Setup installer/Windows/luminar/scripts/LUMINAR-installer.iss
+
+      - name: Upload Windows AUREQ Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AUREQ-${{ env.VERSION }}-Windows
+          path: installer/Windows/aureq/output/AUREQ-${{ env.VERSION }}-Windows-Setup.exe
+          if-no-files-found: error
+
+      - name: Upload Windows LUMINAR Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: LUMINAR-${{ env.VERSION }}-Windows
+          path: installer/Windows/luminar/output/LUMINAR-${{ env.VERSION }}-Windows-Setup.exe
+          if-no-files-found: error
+
+  create-release:
+    name: Create Draft Release
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download macOS AUREQ Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: AUREQ-${{ github.ref_name }}.Substring(1)-macOS # Wait, artifact name doesn't evaluate powershell Substring.
+          # Ah, let's look at the artifact names we uploaded:
+          # AUREQ-${{ env.VERSION }}-macOS (env.VERSION is github.ref_name with leading 'v' stripped).
+          # So the name is literally: AUREQ-VERSION-macOS where VERSION is github.ref_name stripped.
+          # Let's extract the version from the tag here as well.
+      
+      - name: Set Release Version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Download macOS Installers
+        uses: actions/download-artifact@v4
+        with:
+          name: AUREQ-${{ env.VERSION }}-macOS
+          path: ./artifacts/
+
+      - name: Download macOS LUMINAR Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: LUMINAR-${{ env.VERSION }}-macOS
+          path: ./artifacts/
+
+      - name: Download Windows AUREQ Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: AUREQ-${{ env.VERSION }}-Windows
+          path: ./artifacts/
+
+      - name: Download Windows LUMINAR Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: LUMINAR-${{ env.VERSION }}-Windows
+          path: ./artifacts/
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: false
+          name: ASTRA Audio Suite Release ${{ github.ref_name }}
+          body: |
+            Welcome to the new release of the ASTRA Audio Suite!
+            
+            This release contains the installer packages for both AUREQ (Parametric EQ) and LUMINAR (High-Frequency Enhancer).
+            
+            ### Installers Included:
+            - **macOS (Universal Binary - Intel & Apple Silicon)**:
+              - AUREQ-Installer: `AUREQ-${{ env.VERSION }}-macOS.pkg`
+              - LUMINAR-Installer: `LUMINAR-${{ env.VERSION }}-macOS.pkg`
+            - **Windows (x64)**:
+              - AUREQ-Installer: `AUREQ-${{ env.VERSION }}-Windows-Setup.exe`
+              - LUMINAR-Installer: `LUMINAR-${{ env.VERSION }}-Windows-Setup.exe`
+          files: |
+            ./artifacts/AUREQ-${{ env.VERSION }}-macOS.pkg
+            ./artifacts/LUMINAR-${{ env.VERSION }}-macOS.pkg
+            ./artifacts/AUREQ-${{ env.VERSION }}-Windows-Setup.exe
+            ./artifacts/LUMINAR-${{ env.VERSION }}-Windows-Setup.exe

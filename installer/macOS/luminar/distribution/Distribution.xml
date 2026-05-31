@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>LUMINAR</title>
+    
+    <options customize="always" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    
+    <!-- UI Resources -->
+    <background file="background.png" alignment="bottomleft" scaling="none"/>
+    <welcome file="welcome.html"/>
+    <license file="license.html"/>
+    
+    <pkg-ref id="br.com.sidyfurtado.luminar.vst3"/>
+    <pkg-ref id="br.com.sidyfurtado.luminar.standalone"/>
+    
+    <choices-outline>
+        <line choice="default">
+            <line choice="br.com.sidyfurtado.luminar.vst3"/>
+            <line choice="br.com.sidyfurtado.luminar.standalone"/>
+        </line>
+    </choices-outline>
+    
+    <choice id="default" title="LUMINAR" description="LUMINAR Suite Installation"/>
+    
+    <choice id="br.com.sidyfurtado.luminar.vst3" title="LUMINAR VST3 Plug-in" description="Installs the VST3 plug-in to /Library/Audio/Plug-Ins/VST3" start_selected="true" required="true">
+        <pkg-ref id="br.com.sidyfurtado.luminar.vst3"/>
+    </choice>
+    
+    <choice id="br.com.sidyfurtado.luminar.standalone" title="LUMINAR Standalone" description="Installs the Standalone application to /Applications" start_selected="true">
+        <pkg-ref id="br.com.sidyfurtado.luminar.standalone"/>
+    </choice>
+    
+    <pkg-ref id="br.com.sidyfurtado.luminar.vst3" version="VERSION_PLACEHOLDER" onConclusion="none">LUMINAR-VST3-component.pkg</pkg-ref>
+    <pkg-ref id="br.com.sidyfurtado.luminar.standalone" version="VERSION_PLACEHOLDER" onConclusion="none">LUMINAR-Standalone-component.pkg</pkg-ref>
+</installer-gui-script>
