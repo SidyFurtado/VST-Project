@@ -77,35 +77,45 @@
     .plugin-card.luminar-theme .plugin-icon {
       filter: drop-shadow(0 0 12px rgba(246, 201, 14, 0.3));
     }
-    .btn-dl-mac-luminar {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 12px; font-weight: 700;
-      transition: var(--transition);
-      cursor: pointer; border: none;
-      background: var(--amber); color: #04111C; box-shadow: 0 0 20px rgba(246, 201, 14, 0.3);
-      flex: 1;
-    }
-    .btn-dl-mac-luminar:hover { background: #fff; box-shadow: 0 0 30px rgba(246, 201, 14, 0.5); transform: translateY(-1px); }
-    
+    /* ── Download buttons (card) ── */
+    .btn-dl-mac-luminar,
     .btn-dl-win-luminar {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
       border-radius: var(--radius-pill);
-      font-size: 12px; font-weight: 700;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
       transition: var(--transition);
-      cursor: pointer; border: none;
-      background: rgba(248, 250, 252, 0.07); color: var(--text-primary); border: 1px solid rgba(248, 250, 252, 0.15);
-      flex: 1;
+      cursor: pointer;
+      text-decoration: none;
     }
-    .btn-dl-win-luminar:hover { background: rgba(248, 250, 252, 0.13); border-color: var(--border-hover-amber); transform: translateY(-1px); }
-    
-    .btn-dl-large-mac-luminar { background: var(--amber); color: #04111C; box-shadow: 0 0 50px rgba(246, 201, 14, 0.4), 0 8px 30px rgba(0,0,0,0.3); }
-    .btn-dl-large-mac-luminar:hover { background: #fff; box-shadow: 0 0 70px rgba(246, 201, 14, 0.6), 0 12px 40px rgba(0,0,0,0.4); transform: translateY(-3px); }
-    
-    .btn-dl-large-win-luminar { background: rgba(248, 250, 252, 0.07); color: var(--text-primary); border: 1px solid rgba(248, 250, 252, 0.2); backdrop-filter: blur(12px); }
-    .btn-dl-large-win-luminar:hover { background: rgba(248, 250, 252, 0.13); border-color: var(--border-hover-amber); transform: translateY(-3px); box-shadow: 0 0 30px rgba(246, 201, 14, 0.12); }
+    .btn-dl-mac-luminar {
+      background: var(--amber);
+      color: #07060A;
+      box-shadow: 0 4px 20px rgba(246,201,14,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      border: none;
+    }
+    .btn-dl-mac-luminar:hover {
+      background: #ffd94d;
+      box-shadow: 0 6px 28px rgba(246,201,14,0.55);
+      transform: translateY(-2px);
+    }
+    .btn-dl-win-luminar {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1.5px solid rgba(246,201,14,0.35);
+    }
+    .btn-dl-win-luminar:hover {
+      background: rgba(246,201,14,0.08);
+      border-color: rgba(246,201,14,0.65);
+      transform: translateY(-2px);
+    }
     
     @media (max-width: 860px) {
       .download-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
@@ -397,15 +407,18 @@
       font-size: clamp(32px, 5vw, 52px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px;
     }
     .plugins-subtitle { font-size: 17px; color: var(--text-muted); }
-    .plugins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .plugins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; align-items: stretch; }
     .plugin-card {
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
       background: var(--bg-panel);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 32px 28px;
+      padding: 32px 28px 28px;
       backdrop-filter: blur(16px);
       transition: var(--transition);
+      display: flex;
+      flex-direction: column;
     }
     .plugin-card:hover { transform: translateY(-6px); }
     .plugin-card.available {
@@ -428,21 +441,52 @@
     .plugin-badge { margin-bottom: 14px; }
     .plugin-name { font-size: 26px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 6px; }
     .plugin-name-sub { font-size: 12px; font-weight: 600; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
-    .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 28px; }
-    .plugin-download-buttons { display: flex; gap: 10px; }
-    .btn-dl-mac, .btn-dl-win {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 12px; font-weight: 700;
-      transition: var(--transition);
-      cursor: pointer; border: none;
-      flex: 1;
+    .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 24px; flex: 1; }
+    /* ── Download buttons (card) — shared base ── */
+    .plugin-download-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
     }
-    .btn-dl-mac { background: var(--cyan); color: #04111C; box-shadow: 0 0 20px rgba(34,211,238,0.3); }
-    .btn-dl-mac:hover { background: #fff; box-shadow: 0 0 30px rgba(34,211,238,0.5); transform: translateY(-1px); }
-    .btn-dl-win { background: rgba(248,250,252,0.07); color: var(--text-primary); border: 1px solid rgba(248,250,252,0.15); }
-    .btn-dl-win:hover { background: rgba(248,250,252,0.13); border-color: var(--border-hover); transform: translateY(-1px); }
+    .btn-dl-mac,
+    .btn-dl-win {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: var(--transition);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-dl-mac {
+      background: var(--cyan);
+      color: #07060A;
+      box-shadow: 0 4px 20px rgba(34,211,238,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      border: none;
+    }
+    .btn-dl-mac:hover {
+      background: #6ef0ff;
+      box-shadow: 0 6px 28px rgba(34,211,238,0.55);
+      transform: translateY(-2px);
+    }
+    .btn-dl-win {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1.5px solid rgba(34,211,238,0.35);
+    }
+    .btn-dl-win:hover {
+      background: rgba(34,211,238,0.07);
+      border-color: rgba(34,211,238,0.65);
+      transform: translateY(-2px);
+    }
     .plugin-specs { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 20px; }
     .spec-item { font-size: 12px; color: var(--text-faint); }
     .spec-item strong { display: block; color: var(--text-muted); font-weight: 600; margin-bottom: 1px; }
@@ -698,10 +742,12 @@
           <p class="plugin-desc">EQ paramétrico de 8 bandas com bandas dinâmicas, analisador de espectro em tempo real e biblioteca de presets de fábrica para sessões de mixagem profissional.</p>
           <div class="plugin-download-buttons">
             <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-macOS.pkg" class="btn-dl-mac">
-              🍎 macOS
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              macOS — .pkg
             </a>
             <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-win">
-              🪟 Windows
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+              Windows — .exe
             </a>
           </div>
           <div class="plugin-specs">
@@ -763,10 +809,12 @@
           <p class="plugin-desc">Enhancer de altas frequências paralelo com Presence, Air e Texture Layer. Adicione ar, clareza e brilho analógico premium sem esforço.</p>
           <div class="plugin-download-buttons">
             <a id="card-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-macOS.pkg" class="btn-dl-mac-luminar">
-              🍎 macOS
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              macOS — .pkg
             </a>
             <a id="card-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-win-luminar">
-              🪟 Windows
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+              Windows — .exe
             </a>
           </div>
           <div class="plugin-specs">
