@@ -39,7 +39,8 @@ jobs:
 
       - name: Build Release
         run: |
-          cmake --build build --config Release --target AUREQ LUMINAR
+          cmake --build build --config Release --target AUREQ_All LUMINAR_All
+
 
       - name: Stage Payloads
         shell: bash
@@ -173,7 +174,7 @@ jobs:
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
       - name: Build Release
-        run: cmake --build build --config Release --target AUREQ LUMINAR AUREQ_FilterTests
+        run: cmake --build build --config Release --target AUREQ_All LUMINAR_All AUREQ_FilterTests
 
       - name: Run Tests
         shell: pwsh
@@ -268,15 +269,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download macOS AUREQ Installer
-        uses: actions/download-artifact@v4
-        with:
-          name: AUREQ-${{ github.ref_name }}.Substring(1)-macOS # Wait, artifact name doesn't evaluate powershell Substring.
-          # Ah, let's look at the artifact names we uploaded:
-          # AUREQ-${{ env.VERSION }}-macOS (env.VERSION is github.ref_name with leading 'v' stripped).
-          # So the name is literally: AUREQ-VERSION-macOS where VERSION is github.ref_name stripped.
-          # Let's extract the version from the tag here as well.
-      
       - name: Set Release Version
         run: |
           VERSION="${{ github.ref_name }}"
