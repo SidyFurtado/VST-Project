@@ -116,6 +116,123 @@
       border-color: rgba(246,201,14,0.65);
       transform: translateY(-2px);
     }
+
+    /* GRAVITY Theme Customizations */
+    :root {
+      --crimson:        #E84040;
+      --crimson-dim:    rgba(232, 64, 64, 0.35);
+      --crimson-glow:   rgba(232, 64, 64, 0.15);
+      --border-crimson: rgba(232, 64, 64, 0.14);
+      --border-hover-crimson: rgba(232, 64, 64, 0.4);
+    }
+    
+    .plugin-card.gravity-theme.available {
+      border-color: rgba(232, 64, 64, 0.25);
+      box-shadow: 0 0 40px rgba(232, 64, 64, 0.08), inset 0 1px 0 rgba(232, 64, 64, 0.1);
+    }
+    .plugin-card.gravity-theme.available:hover {
+      border-color: rgba(232, 64, 64, 0.5);
+      box-shadow: 0 0 60px rgba(232, 64, 64, 0.15), 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .plugin-card.gravity-theme .plugin-card-glow {
+      background: radial-gradient(circle, rgba(232, 64, 64, 0.12) 0%, transparent 70%);
+    }
+    .plugin-card.gravity-theme .plugin-name-sub {
+      color: var(--crimson);
+    }
+    .plugin-card.gravity-theme .badge-available {
+      background: rgba(232, 64, 64, 0.12);
+      border: 1px solid rgba(232, 64, 64, 0.3);
+      color: var(--crimson);
+    }
+    .plugin-card.gravity-theme .pulse-dot {
+      background: var(--crimson);
+      box-shadow: 0 0 8px var(--crimson);
+    }
+    .plugin-card.gravity-theme .plugin-icon {
+      filter: drop-shadow(0 0 12px rgba(232, 64, 64, 0.3));
+    }
+    /* ── Download buttons (card) ── */
+    .btn-dl-mac-gravity,
+    .btn-dl-win-gravity {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: var(--transition);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-dl-mac-gravity {
+      background: var(--crimson);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(232,64,64,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      border: none;
+    }
+    .btn-dl-mac-gravity:hover {
+      background: #ff5c5c;
+      box-shadow: 0 6px 28px rgba(232,64,64,0.55);
+      transform: translateY(-2px);
+    }
+    .btn-dl-win-gravity {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1.5px solid rgba(232, 64, 64, 0.35);
+    }
+    .btn-dl-win-gravity:hover {
+      background: rgba(232, 64, 64, 0.08);
+      border-color: rgba(232, 64, 64, 0.65);
+      transform: translateY(-2px);
+    }
+
+    /* Large Buttons Theme Customizations */
+    .btn-dl-large-mac-luminar {
+      background: var(--amber);
+      color: #07060A;
+      box-shadow: 0 0 50px rgba(246,201,14,0.3), 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .btn-dl-large-mac-luminar:hover {
+      background: #fff;
+      box-shadow: 0 0 70px rgba(246,201,14,0.5), 0 12px 40px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .btn-dl-large-win-luminar:hover {
+      background: rgba(248,250,252,0.13);
+      border-color: rgba(246,201,14,0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 0 30px rgba(246,201,14,0.12);
+    }
+    
+    .btn-dl-large-mac-gravity {
+      background: var(--crimson);
+      color: #ffffff;
+      box-shadow: 0 0 50px rgba(232,64,64,0.3), 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .btn-dl-large-mac-gravity:hover {
+      background: #fff;
+      color: #07060A;
+      box-shadow: 0 0 70px rgba(232,64,64,0.5), 0 12px 40px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .btn-dl-large-win-gravity {
+      background: rgba(248,250,252,0.07);
+      color: var(--text-primary);
+      border: 1px solid rgba(248,250,252,0.2);
+      backdrop-filter: blur(12px);
+    }
+    .btn-dl-large-win-gravity:hover {
+      background: rgba(248,250,252,0.13);
+      border-color: rgba(232, 64, 64, 0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 0 30px rgba(232, 64, 64, 0.12);
+    }
     
     @media (max-width: 860px) {
       .download-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
@@ -715,7 +832,7 @@
       <div class="plugins-header reveal">
         <p class="section-label">A Coleção</p>
         <h2 class="plugins-title">Ferramentas profissionais para cada etapa.</h2>
-        <p class="plugins-subtitle">Dois plugins disponíveis agora. Mais ferramentas de precisão chegando em breve.</p>
+        <p class="plugins-subtitle">Três plugins disponíveis agora. Mais ferramentas de precisão chegando em breve.</p>
       </div>
       <div class="plugins-grid">
 
@@ -824,14 +941,73 @@
           </div>
         </div>
 
-        <!-- GRAVITY COMP -->
-        <div class="plugin-card coming reveal">
+        <!-- GRAVITY — DISPONÍVEL -->
+        <div class="plugin-card gravity-theme available reveal">
+          <div class="plugin-card-glow"></div>
+          <!-- Inline GRAVITY Icon -->
+          <svg class="plugin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="72" height="72" style="margin-bottom: 20px;">
+            <defs>
+              <radialGradient id="gravity-bg-grad" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="#0B0A0F" />
+                <stop offset="100%" stop-color="#2D1217" />
+              </radialGradient>
+              <radialGradient id="gravity-node-grad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="60%" stop-color="#FF5C5C" />
+                <stop offset="100%" stop-color="#E84040" />
+              </radialGradient>
+              <radialGradient id="gravity-node-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(232, 64, 64, 0.6)" />
+                <stop offset="100%" stop-color="rgba(232, 64, 64, 0)" />
+              </radialGradient>
+              <radialGradient id="gravity-aurora-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(232, 64, 64, 0.25)" />
+                <stop offset="100%" stop-color="rgba(232, 64, 64, 0)" />
+              </radialGradient>
+              <filter id="gravity-glass-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+              </filter>
+            </defs>
+            <rect x="0" y="0" width="1024" height="1024" rx="230" fill="url(#gravity-bg-grad)" />
+            <ellipse cx="768" cy="300" rx="350" ry="250" fill="url(#gravity-aurora-grad)" />
+            <circle cx="512" cy="512" r="320" fill="none" stroke="rgba(232, 64, 64, 0.12)" stroke-width="24" stroke-dasharray="40 20" />
+            <circle cx="512" cy="512" r="220" fill="none" stroke="rgba(232, 64, 64, 0.25)" stroke-width="20" />
+            <path d="M 128,512 C 250,300 350,712 512,512 C 620,350 750,512 896,512" fill="none" stroke="#E84040" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#gravity-glass-shadow)" />
+            <circle cx="512" cy="512" r="140" fill="url(#gravity-node-glow)" />
+            <circle cx="512" cy="512" r="48" fill="url(#gravity-node-grad)" filter="url(#gravity-glass-shadow)" />
+          </svg>
+          <div class="plugin-badge">
+            <span class="badge badge-available"><span class="pulse-dot"></span> Disponível Agora</span>
+          </div>
           <h3 class="plugin-name">GRAVITY</h3>
           <p class="plugin-name-sub">Compressor Dinâmico</p>
-          <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Em Breve</span>
+          <!-- Curva de Knee animada -->
+          <svg class="eq-curve-animated" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:40px;margin-bottom:16px;">
+            <path d="M4,55 L120,30 C150,25 180,22 236,20" stroke="#E84040" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="120" cy="30" r="4" fill="#E84040" filter="url(#glow-crimson)"/>
+            <defs>
+              <filter id="glow-crimson" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+          <p class="plugin-desc">Compressão ultra-transparente estilo R-Comp com detecção Peak/RMS, joelho Soft-Knee analógico de 6dB e controle dinâmico inteligente (ARC).</p>
+          <div class="plugin-download-buttons">
+            <a id="card-btn-mac-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-macOS.pkg" class="btn-dl-mac-gravity">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              macOS — .pkg
+            </a>
+            <a id="card-btn-win-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-Windows-Setup.exe" class="btn-dl-win-gravity">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+              Windows — .exe
+            </a>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Compressão multibanda transparente com controle de sidechain e threshold adaptativo. A gravidade coloca a dinâmica no lugar.</p>
+          <div class="plugin-specs">
+            <div class="spec-item"><strong>Formato</strong>VST3, APP</div>
+            <div class="spec-item"><strong>Versão</strong>1.0.0</div>
+            <div class="spec-item"><strong>Knee</strong>Soft (6dB)</div>
+          </div>
         </div>
 
         <!-- NEBULA SAT -->
@@ -867,7 +1043,7 @@
         <h2 class="download-heading">Baixe a <em>ASTRA Suite</em><br/>agora. Grátis.</h2>
         <p class="download-subtext">Versão beta privada. Disponível para macOS e Windows. Formato VST3 e Standalone, prontos para a sua DAW.</p>
         
-        <div class="download-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 52px; text-align: left;">
+        <div class="download-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; margin-bottom: 52px; text-align: left;">
           
           <!-- AUREQ Download Box -->
           <div class="download-box" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px; backdrop-filter: blur(12px);">
@@ -904,6 +1080,28 @@
                 </div>
               </a>
               <a id="dl-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-luminar" style="width: 100%;">
+                <span class="dl-os-icon">🪟</span>
+                <div class="dl-info">
+                  <span>Baixar para Windows</span>
+                  <small>Windows 10+ 64-bit &middot; Instalador EXE</small>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- GRAVITY Download Box -->
+          <div class="download-box" style="background: var(--bg-panel); border: 1px solid var(--border-crimson); border-radius: var(--radius-lg); padding: 40px; backdrop-filter: blur(12px);">
+            <h3 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; color: var(--crimson);">GRAVITY Compressor</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 28px;">Compressor dinâmico com joelho soft-knee, ARC e comportamento Electro/Opto.</p>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <a id="dl-btn-mac-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-macOS.pkg" class="btn-dl-large btn-dl-large-mac-gravity" style="width: 100%;">
+                <span class="dl-os-icon">🍎</span>
+                <div class="dl-info">
+                  <span>Baixar para macOS</span>
+                  <small>macOS 10.15+ &middot; Apple Silicon &amp; Intel &middot; PKG</small>
+                </div>
+              </a>
+              <a id="dl-btn-win-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-gravity" style="width: 100%;">
                 <span class="dl-os-icon">🪟</span>
                 <div class="dl-info">
                   <span>Baixar para Windows</span>
