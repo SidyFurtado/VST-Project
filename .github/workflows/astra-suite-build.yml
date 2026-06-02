@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Release
         run: |
-          cmake --build build --config Release --target AUREQ_All LUMINAR_All
+          cmake --build build --config Release --target AUREQ_All LUMINAR_All GRAVITY_All
 
 
       - name: Stage Payloads
@@ -53,6 +53,10 @@ jobs:
           mkdir -p installer/macOS/luminar/output
           mkdir -p installer/macOS/luminar/staging/VST3
           mkdir -p installer/macOS/luminar/staging/Standalone
+
+          mkdir -p installer/macOS/gravity/output
+          mkdir -p installer/macOS/gravity/staging/VST3
+          mkdir -p installer/macOS/gravity/staging/Standalone
           
           # Find and copy AUREQ binaries
           AUREQ_VST3=$(find build -type d -name "AUREQ.vst3" | head -n 1)
@@ -86,6 +90,22 @@ jobs:
             echo "LUMINAR.app not found!" && exit 1
           fi
 
+          # Find and copy GRAVITY binaries
+          GRAVITY_VST3=$(find build -type d -name "GRAVITY.vst3" | head -n 1)
+          GRAVITY_APP=$(find build -type d -name "GRAVITY.app" | head -n 1)
+
+          if [ -n "$GRAVITY_VST3" ]; then
+            cp -R "$GRAVITY_VST3" installer/macOS/gravity/staging/VST3/
+          else
+            echo "GRAVITY.vst3 not found!" && exit 1
+          fi
+
+          if [ -n "$GRAVITY_APP" ]; then
+            cp -R "$GRAVITY_APP" installer/macOS/gravity/staging/Standalone/
+          else
+            echo "GRAVITY.app not found!" && exit 1
+          fi
+
       - name: Build macOS PKG Installers
         shell: bash
         run: |
@@ -115,14 +135,29 @@ jobs:
             --component "installer/macOS/luminar/staging/Standalone/LUMINAR.app" \
             "installer/macOS/luminar/output/LUMINAR-Standalone-component.pkg"
 
-          # 3. Create macOS Distribution installers using productbuild
+          # 3. Build GRAVITY VST3 & Standalone components
+          pkgbuild --identifier "br.com.sidyfurtado.gravity.vst3" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/VST3" \
+            --component "installer/macOS/gravity/staging/VST3/GRAVITY.vst3" \
+            "installer/macOS/gravity/output/GRAVITY-VST3-component.pkg"
+
+          pkgbuild --identifier "br.com.sidyfurtado.gravity.standalone" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Applications" \
+            --component "installer/macOS/gravity/staging/Standalone/GRAVITY.app" \
+            "installer/macOS/gravity/output/GRAVITY-Standalone-component.pkg"
+
+          # 4. Create macOS Distribution installers using productbuild
           # Substitute the version in the Distribution.xml templates
           sed "s/VERSION_PLACEHOLDER/${{ env.VERSION }}/g" installer/macOS/aureq/distribution/Distribution.xml > installer/macOS/aureq/output/Distribution.xml
           sed "s/VERSION_PLACEHOLDER/${{ env.VERSION }}/g" installer/macOS/luminar/distribution/Distribution.xml > installer/macOS/luminar/output/Distribution.xml
+          sed "s/VERSION_PLACEHOLDER/${{ env.VERSION }}/g" installer/macOS/gravity/distribution/Distribution.xml > installer/macOS/gravity/output/Distribution.xml
           
           # Copy background image for resources
           cp installer/macOS/plugin-only/resources/background.png installer/macOS/aureq/resources/background.png
           cp installer/macOS/plugin-only/resources/background.png installer/macOS/luminar/resources/background.png
+          cp installer/macOS/plugin-only/resources/background.png installer/macOS/gravity/resources/background.png
 
           productbuild --distribution "installer/macOS/aureq/output/Distribution.xml" \
             --package-path "installer/macOS/aureq/output" \
@@ -133,6 +168,11 @@ jobs:
             --package-path "installer/macOS/luminar/output" \
             --resources "installer/macOS/luminar/resources" \
             "installer/macOS/luminar/output/LUMINAR-${{ env.VERSION }}-macOS.pkg"
+
+          productbuild --distribution "installer/macOS/gravity/output/Distribution.xml" \
+            --package-path "installer/macOS/gravity/output" \
+            --resources "installer/macOS/gravity/resources" \
+            "installer/macOS/gravity/output/GRAVITY-${{ env.VERSION }}-macOS.pkg"
 
       - name: Upload macOS AUREQ Installer
         uses: actions/upload-artifact@v4
@@ -146,6 +186,13 @@ jobs:
         with:
           name: LUMINAR-${{ env.VERSION }}-macOS
           path: installer/macOS/luminar/output/LUMINAR-${{ env.VERSION }}-macOS.pkg
+          if-no-files-found: error
+
+      - name: Upload macOS GRAVITY Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: GRAVITY-${{ env.VERSION }}-macOS
+          path: installer/macOS/gravity/output/GRAVITY-${{ env.VERSION }}-macOS.pkg
           if-no-files-found: error
 
   build-windows:
@@ -174,7 +221,7 @@ jobs:
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
       - name: Build Release
-        run: cmake --build build --config Release --target AUREQ_All LUMINAR_All AUREQ_FilterTests
+        run: cmake --build build --config Release --target AUREQ_All LUMINAR_All GRAVITY_All AUREQ_FilterTests
 
       - name: Run Tests
         shell: pwsh
@@ -201,8 +248,11 @@ jobs:
           New-Item -ItemType Directory -Force -Path installer/Windows/aureq/staging/Standalone
           New-Item -ItemType Directory -Force -Path installer/Windows/luminar/staging/VST3
           New-Item -ItemType Directory -Force -Path installer/Windows/luminar/staging/Standalone
+          New-Item -ItemType Directory -Force -Path installer/Windows/gravity/staging/VST3
+          New-Item -ItemType Directory -Force -Path installer/Windows/gravity/staging/Standalone
           New-Item -ItemType Directory -Force -Path installer/Windows/aureq/output
           New-Item -ItemType Directory -Force -Path installer/Windows/luminar/output
+          New-Item -ItemType Directory -Force -Path installer/Windows/gravity/output
           
           # Find VST3 and Standalone for AUREQ
           $aureqVst3 = Get-ChildItem -Path build -Filter "AUREQ.vst3" -Recurse -Directory | Select-Object -First 1
@@ -240,10 +290,29 @@ jobs:
             exit 1
           }
 
+          # Find VST3 and Standalone for GRAVITY
+          $gravityVst3 = Get-ChildItem -Path build -Filter "GRAVITY.vst3" -Recurse -Directory | Select-Object -First 1
+          $gravityExe = Get-ChildItem -Path build -Filter "GRAVITY.exe" -Recurse -File | Select-Object -First 1
+
+          if ($gravityVst3) {
+            Copy-Item -Path $gravityVst3.FullName -Destination installer/Windows/gravity/staging/VST3/GRAVITY.vst3 -Recurse -Force
+          } else {
+            Write-Error "GRAVITY.vst3 not found!"
+            exit 1
+          }
+
+          if ($gravityExe) {
+            Copy-Item -Path $gravityExe.FullName -Destination installer/Windows/gravity/staging/Standalone/GRAVITY.exe -Force
+          } else {
+            Write-Error "GRAVITY.exe not found!"
+            exit 1
+          }
+
       - name: Compile Inno Setup Installers
         run: |
           iscc /DMyAppVersion=${{ env.VERSION }} /DMyOutputBaseFilename=AUREQ-${{ env.VERSION }}-Windows-Setup installer/Windows/aureq/scripts/AUREQ-installer.iss
           iscc /DMyAppVersion=${{ env.VERSION }} /DMyOutputBaseFilename=LUMINAR-${{ env.VERSION }}-Windows-Setup installer/Windows/luminar/scripts/LUMINAR-installer.iss
+          iscc /DMyAppVersion=${{ env.VERSION }} /DMyOutputBaseFilename=GRAVITY-${{ env.VERSION }}-Windows-Setup installer/Windows/gravity/scripts/GRAVITY-installer.iss
 
       - name: Upload Windows AUREQ Installer
         uses: actions/upload-artifact@v4
@@ -257,6 +326,13 @@ jobs:
         with:
           name: LUMINAR-${{ env.VERSION }}-Windows
           path: installer/Windows/luminar/output/LUMINAR-${{ env.VERSION }}-Windows-Setup.exe
+          if-no-files-found: error
+
+      - name: Upload Windows GRAVITY Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: GRAVITY-${{ env.VERSION }}-Windows
+          path: installer/Windows/gravity/output/GRAVITY-${{ env.VERSION }}-Windows-Setup.exe
           if-no-files-found: error
 
   create-release:

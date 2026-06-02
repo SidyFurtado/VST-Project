@@ -35,7 +35,10 @@ add_subdirectory(tests)
 # Segundo plugin da ASTRA Audio Suite — LUMINAR (High-Frequency Enhancer)
 add_subdirectory(plugins/02_AIR)
 
+# Terceiro plugin da ASTRA Audio Suite — GRAVITY (Dynamic Compressor)
+add_subdirectory(plugins/03_GRAVITY)
+
 # Placeholders para inclusão futura dos próximos plugins
-# add_subdirectory(plugins/02_Compressor)   # compressor — fase futura
+# add_subdirectory(plugins/02_Compressor)   # compressor legado — descontinuado
 # add_subdirectory(plugins/03_Saturation)
 # add_subdirectory(plugins/04_Limiter)
