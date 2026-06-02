@@ -363,6 +363,12 @@ jobs:
           name: LUMINAR-${{ env.VERSION }}-macOS
           path: ./artifacts/
 
+      - name: Download macOS GRAVITY Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: GRAVITY-${{ env.VERSION }}-macOS
+          path: ./artifacts/
+
       - name: Download Windows AUREQ Installer
         uses: actions/download-artifact@v4
         with:
@@ -375,6 +381,12 @@ jobs:
           name: LUMINAR-${{ env.VERSION }}-Windows
           path: ./artifacts/
 
+      - name: Download Windows GRAVITY Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: GRAVITY-${{ env.VERSION }}-Windows
+          path: ./artifacts/
+
       - name: Create Public Release
         uses: softprops/action-gh-release@v2
         with:
@@ -384,17 +396,21 @@ jobs:
           body: |
             Welcome to the new release of the ASTRA Audio Suite!
             
-            This release contains the installer packages for both AUREQ (Parametric EQ) and LUMINAR (High-Frequency Enhancer).
+            This release contains the installer packages for AUREQ (Parametric EQ), LUMINAR (High-Frequency Enhancer), and GRAVITY (Dynamic Compressor).
             
             ### Installers Included:
             - **macOS (Universal Binary - Intel & Apple Silicon)**:
               - AUREQ-Installer: `AUREQ-${{ env.VERSION }}-macOS.pkg`
               - LUMINAR-Installer: `LUMINAR-${{ env.VERSION }}-macOS.pkg`
+              - GRAVITY-Installer: `GRAVITY-${{ env.VERSION }}-macOS.pkg`
             - **Windows (x64)**:
               - AUREQ-Installer: `AUREQ-${{ env.VERSION }}-Windows-Setup.exe`
               - LUMINAR-Installer: `LUMINAR-${{ env.VERSION }}-Windows-Setup.exe`
+              - GRAVITY-Installer: `GRAVITY-${{ env.VERSION }}-Windows-Setup.exe`
           files: |
             ./artifacts/AUREQ-${{ env.VERSION }}-macOS.pkg
             ./artifacts/LUMINAR-${{ env.VERSION }}-macOS.pkg
+            ./artifacts/GRAVITY-${{ env.VERSION }}-macOS.pkg
             ./artifacts/AUREQ-${{ env.VERSION }}-Windows-Setup.exe
             ./artifacts/LUMINAR-${{ env.VERSION }}-Windows-Setup.exe
+            ./artifacts/GRAVITY-${{ env.VERSION }}-Windows-Setup.exe
