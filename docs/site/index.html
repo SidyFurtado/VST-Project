@@ -51,12 +51,16 @@
       --border-hover-amber: rgba(246, 201, 14, 0.4);
     }
     
+    .plugin-card.luminar-theme {
+      --border: rgba(246, 201, 14, 0.25);
+      --border-hover: rgba(246, 201, 14, 0.5);
+    }
     .plugin-card.luminar-theme.available {
-      border-color: rgba(246, 201, 14, 0.25);
+      border-color: var(--border);
       box-shadow: 0 0 40px rgba(246, 201, 14, 0.08), inset 0 1px 0 rgba(246, 201, 14, 0.1);
     }
     .plugin-card.luminar-theme.available:hover {
-      border-color: rgba(246, 201, 14, 0.5);
+      border-color: var(--border-hover);
       box-shadow: 0 0 60px rgba(246, 201, 14, 0.15), 0 20px 40px rgba(0,0,0,0.4);
     }
     .plugin-card.luminar-theme .plugin-card-glow {
@@ -126,12 +130,16 @@
       --border-hover-crimson: rgba(232, 64, 64, 0.4);
     }
     
+    .plugin-card.gravity-theme {
+      --border: rgba(232, 64, 64, 0.25);
+      --border-hover: rgba(232, 64, 64, 0.5);
+    }
     .plugin-card.gravity-theme.available {
-      border-color: rgba(232, 64, 64, 0.25);
+      border-color: var(--border);
       box-shadow: 0 0 40px rgba(232, 64, 64, 0.08), inset 0 1px 0 rgba(232, 64, 64, 0.1);
     }
     .plugin-card.gravity-theme.available:hover {
-      border-color: rgba(232, 64, 64, 0.5);
+      border-color: var(--border-hover);
       box-shadow: 0 0 60px rgba(232, 64, 64, 0.15), 0 20px 40px rgba(0,0,0,0.4);
     }
     .plugin-card.gravity-theme .plugin-card-glow {
@@ -558,7 +566,7 @@
     .plugin-badge { margin-bottom: 14px; }
     .plugin-name { font-size: 26px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 6px; }
     .plugin-name-sub { font-size: 12px; font-weight: 600; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
-    .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 24px; flex: 1; }
+    .plugin-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 24px; }
     /* ── Download buttons (card) — shared base ── */
     .plugin-download-buttons {
       display: flex;
