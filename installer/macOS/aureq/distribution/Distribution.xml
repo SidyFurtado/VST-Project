@@ -12,11 +12,13 @@
     <license file="license.html"/>
     
     <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
+    <pkg-ref id="br.com.sidyfurtado.aureq.au"/>
     <pkg-ref id="br.com.sidyfurtado.aureq.standalone"/>
     
     <choices-outline>
         <line choice="default">
             <line choice="br.com.sidyfurtado.aureq.vst3"/>
+            <line choice="br.com.sidyfurtado.aureq.au"/>
             <line choice="br.com.sidyfurtado.aureq.standalone"/>
         </line>
     </choices-outline>
@@ -27,10 +29,15 @@
         <pkg-ref id="br.com.sidyfurtado.aureq.vst3"/>
     </choice>
     
+    <choice id="br.com.sidyfurtado.aureq.au" title="AUREQ Audio Unit (AU) Plug-in" description="Installs the Audio Unit plug-in to /Library/Audio/Plug-Ins/Components" start_selected="true" required="true">
+        <pkg-ref id="br.com.sidyfurtado.aureq.au"/>
+    </choice>
+    
     <choice id="br.com.sidyfurtado.aureq.standalone" title="AUREQ Standalone" description="Installs the Standalone application to /Applications" start_selected="true">
         <pkg-ref id="br.com.sidyfurtado.aureq.standalone"/>
     </choice>
     
     <pkg-ref id="br.com.sidyfurtado.aureq.vst3" version="VERSION_PLACEHOLDER" onConclusion="none">AUREQ-VST3-component.pkg</pkg-ref>
+    <pkg-ref id="br.com.sidyfurtado.aureq.au" version="VERSION_PLACEHOLDER" onConclusion="none">AUREQ-AU-component.pkg</pkg-ref>
     <pkg-ref id="br.com.sidyfurtado.aureq.standalone" version="VERSION_PLACEHOLDER" onConclusion="none">AUREQ-Standalone-component.pkg</pkg-ref>
 </installer-gui-script>

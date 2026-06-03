@@ -12,11 +12,13 @@
     <license file="license.html"/>
     
     <pkg-ref id="br.com.sidyfurtado.luminar.vst3"/>
+    <pkg-ref id="br.com.sidyfurtado.luminar.au"/>
     <pkg-ref id="br.com.sidyfurtado.luminar.standalone"/>
     
     <choices-outline>
         <line choice="default">
             <line choice="br.com.sidyfurtado.luminar.vst3"/>
+            <line choice="br.com.sidyfurtado.luminar.au"/>
             <line choice="br.com.sidyfurtado.luminar.standalone"/>
         </line>
     </choices-outline>
@@ -27,10 +29,15 @@
         <pkg-ref id="br.com.sidyfurtado.luminar.vst3"/>
     </choice>
     
+    <choice id="br.com.sidyfurtado.luminar.au" title="LUMINAR Audio Unit (AU) Plug-in" description="Installs the Audio Unit plug-in to /Library/Audio/Plug-Ins/Components" start_selected="true" required="true">
+        <pkg-ref id="br.com.sidyfurtado.luminar.au"/>
+    </choice>
+    
     <choice id="br.com.sidyfurtado.luminar.standalone" title="LUMINAR Standalone" description="Installs the Standalone application to /Applications" start_selected="true">
         <pkg-ref id="br.com.sidyfurtado.luminar.standalone"/>
     </choice>
     
     <pkg-ref id="br.com.sidyfurtado.luminar.vst3" version="VERSION_PLACEHOLDER" onConclusion="none">LUMINAR-VST3-component.pkg</pkg-ref>
+    <pkg-ref id="br.com.sidyfurtado.luminar.au" version="VERSION_PLACEHOLDER" onConclusion="none">LUMINAR-AU-component.pkg</pkg-ref>
     <pkg-ref id="br.com.sidyfurtado.luminar.standalone" version="VERSION_PLACEHOLDER" onConclusion="none">LUMINAR-Standalone-component.pkg</pkg-ref>
 </installer-gui-script>

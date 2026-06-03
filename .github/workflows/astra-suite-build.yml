@@ -48,24 +48,34 @@ jobs:
           # Create macOS staging directories
           mkdir -p installer/macOS/aureq/output
           mkdir -p installer/macOS/aureq/staging/VST3
+          mkdir -p installer/macOS/aureq/staging/AU
           mkdir -p installer/macOS/aureq/staging/Standalone
           
           mkdir -p installer/macOS/luminar/output
           mkdir -p installer/macOS/luminar/staging/VST3
+          mkdir -p installer/macOS/luminar/staging/AU
           mkdir -p installer/macOS/luminar/staging/Standalone
 
           mkdir -p installer/macOS/gravity/output
           mkdir -p installer/macOS/gravity/staging/VST3
+          mkdir -p installer/macOS/gravity/staging/AU
           mkdir -p installer/macOS/gravity/staging/Standalone
           
           # Find and copy AUREQ binaries
           AUREQ_VST3=$(find build -type d -name "AUREQ.vst3" | head -n 1)
+          AUREQ_AU=$(find build -type d -name "AUREQ.component" | head -n 1)
           AUREQ_APP=$(find build -type d -name "AUREQ.app" | head -n 1)
           
           if [ -n "$AUREQ_VST3" ]; then
             cp -R "$AUREQ_VST3" installer/macOS/aureq/staging/VST3/
           else
             echo "AUREQ.vst3 not found!" && exit 1
+          fi
+          
+          if [ -n "$AUREQ_AU" ]; then
+            cp -R "$AUREQ_AU" installer/macOS/aureq/staging/AU/
+          else
+            echo "AUREQ.component not found!" && exit 1
           fi
           
           if [ -n "$AUREQ_APP" ]; then
@@ -76,12 +86,19 @@ jobs:
           
           # Find and copy LUMINAR binaries
           LUMINAR_VST3=$(find build -type d -name "LUMINAR.vst3" | head -n 1)
+          LUMINAR_AU=$(find build -type d -name "LUMINAR.component" | head -n 1)
           LUMINAR_APP=$(find build -type d -name "LUMINAR.app" | head -n 1)
           
           if [ -n "$LUMINAR_VST3" ]; then
             cp -R "$LUMINAR_VST3" installer/macOS/luminar/staging/VST3/
           else
             echo "LUMINAR.vst3 not found!" && exit 1
+          fi
+          
+          if [ -n "$LUMINAR_AU" ]; then
+            cp -R "$LUMINAR_AU" installer/macOS/luminar/staging/AU/
+          else
+            echo "LUMINAR.component not found!" && exit 1
           fi
           
           if [ -n "$LUMINAR_APP" ]; then
@@ -92,12 +109,19 @@ jobs:
 
           # Find and copy GRAVITY binaries
           GRAVITY_VST3=$(find build -type d -name "GRAVITY.vst3" | head -n 1)
+          GRAVITY_AU=$(find build -type d -name "GRAVITY.component" | head -n 1)
           GRAVITY_APP=$(find build -type d -name "GRAVITY.app" | head -n 1)
 
           if [ -n "$GRAVITY_VST3" ]; then
             cp -R "$GRAVITY_VST3" installer/macOS/gravity/staging/VST3/
           else
             echo "GRAVITY.vst3 not found!" && exit 1
+          fi
+
+          if [ -n "$GRAVITY_AU" ]; then
+            cp -R "$GRAVITY_AU" installer/macOS/gravity/staging/AU/
+          else
+            echo "GRAVITY.component not found!" && exit 1
           fi
 
           if [ -n "$GRAVITY_APP" ]; then
@@ -109,12 +133,18 @@ jobs:
       - name: Build macOS PKG Installers
         shell: bash
         run: |
-          # 1. Package AUREQ VST3 & Standalone components
+          # 1. Package AUREQ VST3, AU & Standalone components
           pkgbuild --identifier "br.com.sidyfurtado.aureq.vst3" \
             --version "${{ env.VERSION }}" \
             --install-location "/Library/Audio/Plug-Ins/VST3" \
             --component "installer/macOS/aureq/staging/VST3/AUREQ.vst3" \
             "installer/macOS/aureq/output/AUREQ-VST3-component.pkg"
+            
+          pkgbuild --identifier "br.com.sidyfurtado.aureq.au" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/Components" \
+            --component "installer/macOS/aureq/staging/AU/AUREQ.component" \
+            "installer/macOS/aureq/output/AUREQ-AU-component.pkg"
             
           pkgbuild --identifier "br.com.sidyfurtado.aureq.standalone" \
             --version "${{ env.VERSION }}" \
@@ -122,12 +152,18 @@ jobs:
             --component "installer/macOS/aureq/staging/Standalone/AUREQ.app" \
             "installer/macOS/aureq/output/AUREQ-Standalone-component.pkg"
 
-          # 2. Build LUMINAR VST3 & Standalone components
+          # 2. Build LUMINAR VST3, AU & Standalone components
           pkgbuild --identifier "br.com.sidyfurtado.luminar.vst3" \
             --version "${{ env.VERSION }}" \
             --install-location "/Library/Audio/Plug-Ins/VST3" \
             --component "installer/macOS/luminar/staging/VST3/LUMINAR.vst3" \
             "installer/macOS/luminar/output/LUMINAR-VST3-component.pkg"
+            
+          pkgbuild --identifier "br.com.sidyfurtado.luminar.au" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/Components" \
+            --component "installer/macOS/luminar/staging/AU/LUMINAR.component" \
+            "installer/macOS/luminar/output/LUMINAR-AU-component.pkg"
             
           pkgbuild --identifier "br.com.sidyfurtado.luminar.standalone" \
             --version "${{ env.VERSION }}" \
@@ -135,12 +171,18 @@ jobs:
             --component "installer/macOS/luminar/staging/Standalone/LUMINAR.app" \
             "installer/macOS/luminar/output/LUMINAR-Standalone-component.pkg"
 
-          # 3. Build GRAVITY VST3 & Standalone components
+          # 3. Build GRAVITY VST3, AU & Standalone components
           pkgbuild --identifier "br.com.sidyfurtado.gravity.vst3" \
             --version "${{ env.VERSION }}" \
             --install-location "/Library/Audio/Plug-Ins/VST3" \
             --component "installer/macOS/gravity/staging/VST3/GRAVITY.vst3" \
             "installer/macOS/gravity/output/GRAVITY-VST3-component.pkg"
+
+          pkgbuild --identifier "br.com.sidyfurtado.gravity.au" \
+            --version "${{ env.VERSION }}" \
+            --install-location "/Library/Audio/Plug-Ins/Components" \
+            --component "installer/macOS/gravity/staging/AU/GRAVITY.component" \
+            "installer/macOS/gravity/output/GRAVITY-AU-component.pkg"
 
           pkgbuild --identifier "br.com.sidyfurtado.gravity.standalone" \
             --version "${{ env.VERSION }}" \

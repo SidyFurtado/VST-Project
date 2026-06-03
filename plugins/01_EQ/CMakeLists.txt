@@ -11,8 +11,8 @@ if(TARGET juce::juce_audio_processors)
         VERSION "0.9.0"
         # Bundle ID reverso sem espaços para empacotamento macOS/VST3
         BUNDLE_ID "br.com.sidyfurtado.aureq"
-        # Formatos de build de saída (apenas VST3 nesta fase)
-        FORMATS VST3 Standalone
+        # Formatos de build de saída (adicionado AU para macOS)
+        FORMATS VST3 AU Standalone
         # Fabricante do plugin
         COMPANY_NAME "ASTRA Audio"
         # Identificador exclusivo do plugin (4 caracteres)

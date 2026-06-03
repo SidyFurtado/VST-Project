@@ -21,7 +21,7 @@ if(TARGET juce::juce_audio_processors)
         COMPANY_NAME     "ASTRA Audio"
 
         # ---- Formatos de saída -----------------------------------------------------
-        FORMATS          VST3 Standalone
+        FORMATS          VST3 AU Standalone
 
         # ---- Características -------------------------------------------------------
         IS_SYNTH              FALSE
