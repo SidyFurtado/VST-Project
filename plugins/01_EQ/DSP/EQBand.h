@@ -83,6 +83,7 @@ private:
     std::atomic<float> currentDynamicGainDb { 0.0f };
 
     float envelopeState = 0.0f;
+    float averageLevel = 0.0f;
     float attackCoeff = 0.99f;
     float releaseCoeff = 0.99f;
 

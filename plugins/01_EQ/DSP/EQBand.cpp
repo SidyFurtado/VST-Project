@@ -25,6 +25,7 @@ void EQBand::prepare(double newSampleRate, int numChannels)
     qSmoother.reset(q);
 
     envelopeState = 0.0f;
+    averageLevel = 0.0f;
     currentDynamicGainDb = 0.0f;
     updateEnvelopeCoefficients();
 
@@ -40,6 +41,7 @@ void EQBand::reset()
     gainSmoother.reset(gainDecibels);
     qSmoother.reset(q);
     envelopeState = 0.0f;
+    averageLevel = 0.0f;
     currentDynamicGainDb = 0.0f;
 }
 
@@ -73,6 +75,8 @@ void EQBand::setFrequency(float freq)
     {
         frequency = clampedFreq;
         freqSmoother.setTarget(clampedFreq);
+
+        updateEnvelopeCoefficients();
 
         if (sampleRate <= 0.0 || !freqSmoother.isSmoothing())
         {
@@ -158,7 +162,9 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
     {
         // 2a. Envelope Follower: run sample-by-sample on INPUT buffer (before filtering)
         float currentEnvelope = envelopeState;
+        float currentAverage = averageLevel;
         const int numChans = buffer.getNumChannels();
+        const float slowCoeff = std::exp(-1.0f / (static_cast<float>(sampleRate) * 1.5f));
 
         for (int sample = 0; sample < numSamples; ++sample)
         {
@@ -173,13 +179,24 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
                 currentEnvelope = absSample + attackCoeff * (currentEnvelope - absSample);
             else
                 currentEnvelope = absSample + releaseCoeff * (currentEnvelope - absSample);
+
+            // Track slow running average level (RMS/average envelope tracker)
+            currentAverage = absSample + slowCoeff * (currentAverage - absSample);
         }
 
         // Safety clamp against denormal/NaN/Inf in persistent state
         if (std::isnan(currentEnvelope) || std::isinf(currentEnvelope) || currentEnvelope < 1e-15f)
             currentEnvelope = 0.0f;
+        if (std::isnan(currentAverage) || std::isinf(currentAverage) || currentAverage < 1e-15f)
+            currentAverage = 0.0f;
 
         envelopeState = currentEnvelope;
+        averageLevel = currentAverage;
+
+        // Auto-Threshold calculation (8 dB below the slow running average level)
+        float averageDb = juce::Decibels::gainToDecibels(averageLevel, -100.0f);
+        dynamicThreshold = averageDb - 8.0f;
+        dynamicThreshold = std::max(-50.0f, std::min(dynamicThreshold, -12.0f));
 
         // 2b. Dynamic Gain calculation relative to threshold (convert to dBFS)
         float envelopeDb = juce::Decibels::gainToDecibels(envelopeState, -100.0f);
@@ -449,6 +466,7 @@ void EQBand::setDynamicEnabled(bool enabledVal)
         if (!dynamicEnabled)
         {
             envelopeState = 0.0f;
+            averageLevel = 0.0f;
             updateFilterCoefficients(); // Reset to static gain coefficients immediately
         }
     }
@@ -493,8 +511,17 @@ void EQBand::updateEnvelopeCoefficients()
 {
     if (sampleRate > 0.0)
     {
-        const float attackSec = std::max(0.1f, dynamicAttack) / 1000.0f;
-        const float releaseSec = std::max(10.0f, dynamicRelease) / 1000.0f;
+        // Auto-timing based on center frequency (frequency)
+        float fc = std::max(20.0f, std::min(frequency, 20000.0f));
+        
+        float attackMs = 10000.0f / fc;
+        attackMs = std::max(1.5f, std::min(attackMs, 120.0f));
+        
+        float releaseMs = 6.0f * attackMs;
+        releaseMs = std::max(20.0f, std::min(releaseMs, 600.0f));
+        
+        const float attackSec = attackMs / 1000.0f;
+        const float releaseSec = releaseMs / 1000.0f;
 
         attackCoeff = std::exp(-1.0f / (static_cast<float>(sampleRate) * attackSec));
         releaseCoeff = std::exp(-1.0f / (static_cast<float>(sampleRate) * releaseSec));

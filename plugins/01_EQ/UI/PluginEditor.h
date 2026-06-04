@@ -97,11 +97,7 @@ private:
     juce::Slider qSlider;
 
     // Dynamic EQ Controls
-    juce::ToggleButton dynToggleButton;
     juce::Slider dynRangeSlider;
-    juce::Slider dynThresholdSlider;
-    juce::Slider dynAttackSlider;
-    juce::Slider dynReleaseSlider;
 
     // Buttons
     juce::ToggleButton globalBypassButton;
@@ -109,10 +105,6 @@ private:
     juce::ToggleButton bandBypassBtn;
     juce::TextButton addBandBtn { "+ Band" };
     juce::TextButton removeBandBtn { "Remove" };
-    juce::TextButton slope6Btn  { "6" };
-    juce::TextButton slope12Btn { "12" };
-    juce::TextButton slope18Btn { "18" };
-    juce::TextButton slope24Btn { "24" };
 
     // Header buttons (placeholders / toggle)
     juce::TextButton prevPresetBtn { "<" };
@@ -122,7 +114,6 @@ private:
     juce::TextButton themeHeaderBtn { "Theme" };
     juce::TextButton bypassHeaderBtn { "Bypass" };
     juce::TextButton resetBtn { "Reset" };
-    std::array<juce::TextButton, 7> filterTypeButtons;
     std::array<juce::TextButton, 5> channelModeButtons;
 
     // Preset Label
@@ -144,11 +135,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> qAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bandBypassAttachment;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> dynToggleAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynRangeAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynThresholdAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynAttackAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynReleaseAttachment;
 
     // Spectrum analyzer processor (UI thread only, driven by timerCallback)
     AnalyzerProcessor analyzerProcessor;

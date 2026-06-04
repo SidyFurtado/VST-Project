@@ -98,16 +98,15 @@ void EQProcessorCore::updateFromAPVTS(juce::AudioProcessorValueTreeState& apvts)
             bands[static_cast<size_t>(i)].setSlope(slopeDbPerOct);
         }
 
-        // Phase 6.0: Read Dynamic EQ parameters from APVTS and pass to bands
-        if (auto* pDynEnabled = apvts.getRawParameterValue(AUREQ::Params::bandDynamicEnabledID(i)))
-        {
-            bands[static_cast<size_t>(i)].setDynamicEnabled(pDynEnabled->load() > 0.5f);
-        }
-
+        // Phase 6.0 & 21.1: Read Dynamic EQ parameters from APVTS and pass to bands
+        // Auto-enable dynamic processing whenever dynamicRange is non-zero (Fase 21.1)
+        float rangeVal = 0.0f;
         if (auto* pDynRange = apvts.getRawParameterValue(AUREQ::Params::bandDynamicRangeID(i)))
         {
-            bands[static_cast<size_t>(i)].setDynamicRange(pDynRange->load());
+            rangeVal = pDynRange->load();
+            bands[static_cast<size_t>(i)].setDynamicRange(rangeVal);
         }
+        bands[static_cast<size_t>(i)].setDynamicEnabled(std::abs(rangeVal) > 1e-4f);
 
         if (auto* pDynThreshold = apvts.getRawParameterValue(AUREQ::Params::bandDynamicThresholdID(i)))
         {

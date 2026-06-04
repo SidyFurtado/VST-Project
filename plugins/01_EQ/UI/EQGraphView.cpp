@@ -913,9 +913,16 @@ namespace AUREQ
         
         if (clickedIndex != -1)
         {
-            activeBandDragIndex = clickedIndex;
             setSelectedBandIndex (clickedIndex);
             
+            if (event.mods.isPopupMenu())
+            {
+                if (onBandContextMenuRequested)
+                    onBandContextMenuRequested (clickedIndex, event.getEventRelativeTo (this).position.roundToInt());
+                return;
+            }
+            
+            activeBandDragIndex = clickedIndex;
             if (onDragStart)
                 onDragStart(activeBandDragIndex);
         }
