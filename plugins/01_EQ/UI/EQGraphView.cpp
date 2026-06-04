@@ -934,16 +934,67 @@ namespace AUREQ
         else
         {
             setSelectedBandIndex (-1); // Deselect on clicking empty space
-            
-            // Trigger band creation callback on double-click on empty space
-            if (event.getNumberOfClicks() == 2 && onBandCreateRequested)
-            {
-                float freq = xToFrequency (event.position.x);
-                float gain = yToGain (event.position.y);
-                onBandCreateRequested (freq, gain);
-            }
         }
         repaint();
+    }
+
+    void EQGraphView::mouseDoubleClick(const juce::MouseEvent& event)
+    {
+        float clickRadius = 12.0f;
+        bool clickedHandle = false;
+        
+        for (const auto& band : bands)
+        {
+            if (band.enabled)
+            {
+                float x = getNormalizedX(band.frequencyHz);
+                float y = getNormalizedY(band.gainDb);
+                float dx = event.position.x - x;
+                float dy = event.position.y - y;
+                if (std::sqrt(dx * dx + dy * dy) <= clickRadius)
+                {
+                    clickedHandle = true;
+                    break;
+                }
+            }
+        }
+
+        if (!clickedHandle && onBandCreateRequested)
+        {
+            float freq = xToFrequency (event.position.x);
+            float gain = yToGain (event.position.y);
+            
+            int filterTypeIndex = 0; // Bell
+            int slopeIndex = 1;      // 12 dB/oct
+            
+            if (freq < 40.0f)
+            {
+                filterTypeIndex = 1; // Low Cut
+                slopeIndex = 3;      // 24 dB/oct
+                gain = 0.0f;         // Ignore gain
+            }
+            else if (freq <= 10000.0f)
+            {
+                filterTypeIndex = 0; // Bell
+                slopeIndex = 1;      // 12 dB/oct
+            }
+            else
+            {
+                if (gain >= -3.0f && gain <= 3.0f)
+                {
+                    filterTypeIndex = 2; // High Cut
+                    slopeIndex = 3;      // 24 dB/oct
+                    gain = 0.0f;         // Ignore gain
+                }
+                else
+                {
+                    filterTypeIndex = 4; // High Shelf
+                    slopeIndex = 1;      // 12 dB/oct
+                }
+            }
+            
+            onBandCreateRequested (freq, gain, filterTypeIndex, slopeIndex);
+        }
     }
 
     void EQGraphView::mouseDrag(const juce::MouseEvent& event)
@@ -1085,12 +1136,13 @@ namespace AUREQ
         if (plotBounds.getWidth() <= 0)
             return 20.0f;
         
-        float minF = 20.0f;
-        float maxF = 20000.0f;
+        float xRelative = x - (float)plotBounds.getX();
+        float width = (float)plotBounds.getWidth();
+        float ratio = xRelative / width;
+        ratio = juce::jlimit(0.0f, 1.0f, ratio);
         
-        float val = (x - (float)plotBounds.getX()) / (float)plotBounds.getWidth();
-        val = juce::jlimit(0.0f, 1.0f, val);
-        
-        return minF * std::exp(val * (std::log(maxF) - std::log(minF)));
+        // Exact mathematical pixel-to-Hertz reverse formula required by Phase 23.0
+        float f = 20.0f * std::pow(20000.0f / 20.0f, ratio);
+        return f;
     }
 }

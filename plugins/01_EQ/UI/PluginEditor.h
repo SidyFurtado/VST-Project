@@ -137,7 +137,6 @@ private:
     // Buttons
     juce::ToggleButton globalBypassButton;
     juce::ToggleButton themeToggleButton;
-    juce::TextButton addBandBtn { "+ Band" };
 
     // Header buttons (placeholders / toggle)
     juce::TextButton prevPresetBtn { "<" };

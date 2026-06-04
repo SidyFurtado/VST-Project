@@ -65,6 +65,7 @@ namespace AUREQ
         void mouseDown(const juce::MouseEvent& event) override;
         void mouseDrag(const juce::MouseEvent& event) override;
         void mouseUp(const juce::MouseEvent& event) override;
+        void mouseDoubleClick(const juce::MouseEvent& event) override;
         void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
 
         // Coordinate conversion helpers
@@ -78,7 +79,7 @@ namespace AUREQ
         std::function<void(int bandIndex, float frequencyHz, float gainDb)> onBandDragged;
         std::function<void(int bandIndex)> onDragEnd;
         std::function<void(int bandIndex, float q)> onBandQChanged;
-        std::function<void(float frequencyHz, float gainDb)> onBandCreateRequested;
+        std::function<void(float frequencyHz, float gainDb, int filterTypeIndex, int slopeIndex)> onBandCreateRequested;
         std::function<void(int bandIndex, juce::Point<int> screenPosition)> onBandContextMenuRequested;
         std::function<void(int bandIndex, bool isSolo)> onBandSoloStatusChanged;
 

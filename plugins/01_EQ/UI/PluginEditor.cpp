@@ -647,7 +647,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     
     globalBypassButton.setLookAndFeel (&aureqLookAndFeel);
     themeToggleButton.setLookAndFeel (&aureqLookAndFeel);
-    addBandBtn.setLookAndFeel (&aureqLookAndFeel);
     
     // Apply LookAndFeel to header buttons
     prevPresetBtn.setLookAndFeel (&aureqLookAndFeel);
@@ -679,75 +678,10 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     
     themeToggleButton.setButtonText ("Theme");
     addAndMakeVisible (themeToggleButton);
-    
-    addBandBtn.setButtonText ("+ Band");
-    addAndMakeVisible (addBandBtn);
 
     // Add floating panel
     addAndMakeVisible (floatingPanel);
     floatingPanel.setVisible (false);
-
-    // Setup + Band onClick
-    addBandBtn.onClick = [this]()
-    {
-        int freeBandIdx = -1;
-        for (int i = 0; i < AUREQ::Params::numBands; ++i)
-        {
-            if (auto* enabledParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandEnabledID (i)))
-            {
-                if (enabledParam->load() < 0.5f)
-                {
-                    freeBandIdx = i;
-                    break;
-                }
-            }
-        }
-
-        if (freeBandIdx != -1)
-        {
-            audioProcessor.captureUndoCheckpoint();
-
-            if (auto* enabledParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandEnabledID (freeBandIdx)))
-            {
-                enabledParam->beginChangeGesture();
-                enabledParam->setValueNotifyingHost (1.0f);
-                enabledParam->endChangeGesture();
-            }
-            if (auto* bypassParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandBypassID (freeBandIdx)))
-            {
-                bypassParam->beginChangeGesture();
-                bypassParam->setValueNotifyingHost (0.0f);
-                bypassParam->endChangeGesture();
-            }
-            if (auto* freqParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandFrequencyID (freeBandIdx)))
-            {
-                freqParam->beginChangeGesture();
-                freqParam->setValueNotifyingHost (freqParam->convertTo0to1 (AUREQ::Params::defaultBandFrequency (freeBandIdx)));
-                freqParam->endChangeGesture();
-            }
-            if (auto* gainParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandGainID (freeBandIdx)))
-            {
-                gainParam->beginChangeGesture();
-                gainParam->setValueNotifyingHost (gainParam->convertTo0to1 (0.0f));
-                gainParam->endChangeGesture();
-            }
-            if (auto* qParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandQID (freeBandIdx)))
-            {
-                qParam->beginChangeGesture();
-                qParam->setValueNotifyingHost (qParam->convertTo0to1 (1.0f));
-                qParam->endChangeGesture();
-            }
-            if (auto* typeParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandTypeID (freeBandIdx)))
-            {
-                typeParam->beginChangeGesture();
-                typeParam->setValueNotifyingHost (typeParam->convertTo0to1 (0.0f)); // Bell
-                typeParam->endChangeGesture();
-            }
-
-            graphView.setSelectedBandIndex (freeBandIdx);
-            updateSelectedBandControls();
-        }
-    };
 
     // Setup Floating Panel Delete Action
     floatingPanel.onDeleteClicked = [this]()
@@ -953,7 +887,7 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     };
 
     // Setup band create requested callback (double-click in EQGraphView)
-    graphView.onBandCreateRequested = [this] (float frequencyHz, float gainDb)
+    graphView.onBandCreateRequested = [this] (float frequencyHz, float gainDb, int filterTypeIndex, int slopeIndex)
     {
         int freeBandIdx = -1;
         for (int i = 0; i < AUREQ::Params::numBands; ++i)
@@ -970,41 +904,52 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
 
         if (freeBandIdx != -1)
         {
-            audioProcessor.captureUndoCheckpoint();
+            auto* enabledParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandEnabledID (freeBandIdx));
+            auto* bypassParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandBypassID (freeBandIdx));
+            auto* freqParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandFrequencyID (freeBandIdx));
+            auto* gainParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandGainID (freeBandIdx));
+            auto* qParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandQID (freeBandIdx));
+            auto* typeParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandTypeID (freeBandIdx));
+            auto* slopeParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandSlopeID (freeBandIdx));
 
-            if (auto* enabledParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandEnabledID (freeBandIdx)))
+            if (enabledParam && bypassParam && freqParam && gainParam && qParam && typeParam && slopeParam)
             {
+                audioProcessor.captureUndoCheckpoint();
+
                 enabledParam->beginChangeGesture();
-                enabledParam->setValueNotifyingHost (1.0f);
-                enabledParam->endChangeGesture();
-            }
-            if (auto* bypassParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandBypassID (freeBandIdx)))
-            {
                 bypassParam->beginChangeGesture();
-                bypassParam->setValueNotifyingHost (0.0f);
-                bypassParam->endChangeGesture();
-            }
-            if (auto* freqParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandFrequencyID (freeBandIdx)))
-            {
                 freqParam->beginChangeGesture();
-                freqParam->setValueNotifyingHost (freqParam->convertTo0to1 (frequencyHz));
-                freqParam->endChangeGesture();
-            }
-            if (auto* gainParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandGainID (freeBandIdx)))
-            {
                 gainParam->beginChangeGesture();
-                gainParam->setValueNotifyingHost (gainParam->convertTo0to1 (gainDb));
-                gainParam->endChangeGesture();
-            }
-            if (auto* typeParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandTypeID (freeBandIdx)))
-            {
+                qParam->beginChangeGesture();
                 typeParam->beginChangeGesture();
-                typeParam->setValueNotifyingHost (typeParam->convertTo0to1 (0.0f)); // Default: Bell
+                slopeParam->beginChangeGesture();
+
+                freqParam->setValueNotifyingHost (freqParam->convertTo0to1 (frequencyHz));
+                gainParam->setValueNotifyingHost (gainParam->convertTo0to1 (gainDb));
+                qParam->setValueNotifyingHost (qParam->convertTo0to1 (1.0f)); // Pro-Q style default Q
+                typeParam->setValueNotifyingHost (typeParam->convertTo0to1 ((float)filterTypeIndex));
+                slopeParam->setValueNotifyingHost (slopeParam->convertTo0to1 ((float)slopeIndex));
+                bypassParam->setValueNotifyingHost (0.0f); // Not bypassed
+                
+                // Activate the band (isActive = true)
+                enabledParam->setValueNotifyingHost (1.0f);
+
+                enabledParam->endChangeGesture();
+                bypassParam->endChangeGesture();
+                freqParam->endChangeGesture();
+                gainParam->endChangeGesture();
+                qParam->endChangeGesture();
                 typeParam->endChangeGesture();
+                slopeParam->endChangeGesture();
             }
 
+            // Focus and anchor the new band handle immediately
             graphView.setSelectedBandIndex (freeBandIdx);
             updateSelectedBandControls();
+        }
+        else
+        {
+            juce::Logger::writeToLog ("AUREQ: Maximum band limit reached (12 bands). Cannot create new band.");
         }
     };
 
@@ -1203,8 +1148,6 @@ AureqAudioProcessorEditor::~AureqAudioProcessorEditor()
     themeHeaderBtn.setLookAndFeel (nullptr);
     bypassHeaderBtn.setLookAndFeel (nullptr);
     resetBtn.setLookAndFeel (nullptr);
-
-    addBandBtn.setLookAndFeel (nullptr);
 }
 
 bool AureqAudioProcessorEditor::keyPressed (const juce::KeyPress& key)
@@ -1290,7 +1233,6 @@ void AureqAudioProcessorEditor::applyLocalizedTexts()
     globalBypassButton.setButtonText (text (AUREQ::TextKey::Bypass));
     floatingPanel.bandBypassBtn.setButtonText (text (AUREQ::TextKey::Bypass));
     resetBtn.setButtonText (text (AUREQ::TextKey::Reset));
-    addBandBtn.setButtonText (text (AUREQ::TextKey::AddBand));
     floatingPanel.removeBandBtn.setButtonText (text (AUREQ::TextKey::Remove));
 
     graphView.setLanguage (currentLanguage);
@@ -2028,7 +1970,6 @@ void AureqAudioProcessorEditor::resized()
     globalBypassButton.setBounds (750, bottomY + 54, 60, 24);
     
     // Toggles/Buttons (Vertically aligned at Y = bottomY + 54, height = 24)
-    addBandBtn.setBounds (126, bottomY + 20, 80, 24);
     themeToggleButton.setBounds (126, bottomY + 54, 80, 24);
 }
 
