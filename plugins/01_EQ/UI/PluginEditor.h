@@ -26,6 +26,46 @@ public:
                            bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
 };
 
+class FloatingBandPanel : public juce::Component
+{
+public:
+    FloatingBandPanel (AureqAudioProcessor& processor, juce::LookAndFeel& lookAndFeel);
+    ~FloatingBandPanel() override;
+
+    void updateSelection (int bandIndex);
+    void updateThemeColors (const AUREQ::ThemeColors& colors);
+    void updateRealtimeMeter (const AUREQ::ThemeColors& colors);
+    
+    void paint (juce::Graphics& g) override;
+    void resized() override;
+
+    std::function<void()> onDeleteClicked;
+
+    // Sliders / Knobs
+    juce::Slider freqSlider;
+    juce::Slider gainSlider;
+    juce::Slider qSlider;
+    juce::Slider dynRangeSlider;
+    juce::ToggleButton bandBypassBtn;
+    juce::TextButton removeBandBtn { "Delete" };
+    juce::Label dynGainMeterLabel;
+
+private:
+    AureqAudioProcessor& audioProcessor;
+    AUREQ::ThemeColors themeColors;
+    int selectedBandIndex = -1;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> qAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynRangeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bandBypassAttachment;
+
+    juce::DropShadowEffect shadowEffect;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FloatingBandPanel)
+};
+
 class AureqAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                    private juce::AudioProcessorValueTreeState::Listener,
                                    private juce::AsyncUpdater,
@@ -88,23 +128,16 @@ private:
     AUREQ::AureqLanguage currentLanguage { AUREQ::AureqLanguage::PortugueseBR };
 
     AureqLookAndFeel aureqLookAndFeel;
+    FloatingBandPanel floatingPanel;
 
     // Sliders / Knobs
     juce::Slider inputGainSlider;
     juce::Slider outputGainSlider;
-    juce::Slider freqSlider;
-    juce::Slider gainSlider;
-    juce::Slider qSlider;
-
-    // Dynamic EQ Controls
-    juce::Slider dynRangeSlider;
 
     // Buttons
     juce::ToggleButton globalBypassButton;
     juce::ToggleButton themeToggleButton;
-    juce::ToggleButton bandBypassBtn;
     juce::TextButton addBandBtn { "+ Band" };
-    juce::TextButton removeBandBtn { "Remove" };
 
     // Header buttons (placeholders / toggle)
     juce::TextButton prevPresetBtn { "<" };
@@ -114,11 +147,9 @@ private:
     juce::TextButton themeHeaderBtn { "Theme" };
     juce::TextButton bypassHeaderBtn { "Bypass" };
     juce::TextButton resetBtn { "Reset" };
-    std::array<juce::TextButton, 5> channelModeButtons;
 
     // Preset Label
     juce::Label presetLabel;
-    juce::Label dynGainMeterLabel;
     std::unique_ptr<juce::AlertWindow> saveUserPresetAlert;
 
     int lastWheelQCheckpointBand = -1;
@@ -129,13 +160,6 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> globalBypassAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> themeToggleAttachment;
-
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> qAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bandBypassAttachment;
-
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dynRangeAttachment;
 
     // Spectrum analyzer processor (UI thread only, driven by timerCallback)
     AnalyzerProcessor analyzerProcessor;

@@ -16,6 +16,9 @@ public:
     void updateFromAPVTS(juce::AudioProcessorValueTreeState& apvts);
     void processBlock(juce::AudioBuffer<float>& buffer);
     float getBandDynamicGainDb(int bandIndex) const;
+    
+    void setSoloBandIndex (int index) { soloBandIndex = index; }
+    int getSoloBandIndex() const { return soloBandIndex; }
 
     const std::array<EQBand, AUREQ::Params::numBands>& getBands() const { return bands; }
     
@@ -35,5 +38,9 @@ private:
     float outputGain = 0.0f;
     bool globalBypass = false;
     int themeMode = 1; // Default: Dark (index 1)
+
+    int soloBandIndex = -1;
+    int lastSoloBandIndex = -1;
+    BiquadFilter soloFilter;
 };
 

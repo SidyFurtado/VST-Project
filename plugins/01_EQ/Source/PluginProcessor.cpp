@@ -105,6 +105,7 @@ void AureqAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 
     // Atualizar e processar no motor de EQ
     eqCore.updateFromAPVTS (apvts);
+    eqCore.setSoloBandIndex (soloBandIndex.load());
     eqCore.processBlock (buffer);
 
     // Push post-EQ samples into the lock-free analyzer FIFO.

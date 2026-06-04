@@ -922,6 +922,11 @@ namespace AUREQ
                 return;
             }
             
+            if (event.mods.isAltDown() && onBandSoloStatusChanged)
+            {
+                onBandSoloStatusChanged (clickedIndex, true);
+            }
+            
             activeBandDragIndex = clickedIndex;
             if (onDragStart)
                 onDragStart(activeBandDragIndex);
@@ -958,6 +963,15 @@ namespace AUREQ
             
             repaint();
             
+            if (event.mods.isAltDown() && onBandSoloStatusChanged)
+            {
+                onBandSoloStatusChanged (activeBandDragIndex, true);
+            }
+            else if (onBandSoloStatusChanged)
+            {
+                onBandSoloStatusChanged (activeBandDragIndex, false);
+            }
+            
             if (onBandDragged)
                 onBandDragged(activeBandDragIndex, freq, gain);
         }
@@ -973,6 +987,9 @@ namespace AUREQ
             activeBandDragIndex = -1;
             
             repaint();
+            
+            if (onBandSoloStatusChanged)
+                onBandSoloStatusChanged (finishedIndex, false);
             
             if (onDragEnd)
                 onDragEnd(finishedIndex);

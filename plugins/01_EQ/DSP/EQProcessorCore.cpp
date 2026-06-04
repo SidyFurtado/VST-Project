@@ -20,6 +20,7 @@ void EQProcessorCore::prepare(double sampleRate, int samplesPerBlock, int numCha
     {
         band.prepare(sampleRate, numChannels);
     }
+    soloFilter.prepare (sampleRate, numChannels);
 }
 
 void EQProcessorCore::reset()
@@ -28,6 +29,7 @@ void EQProcessorCore::reset()
     {
         band.reset();
     }
+    soloFilter.reset();
 }
 
 void EQProcessorCore::updateFromAPVTS(juce::AudioProcessorValueTreeState& apvts)
@@ -170,7 +172,47 @@ void EQProcessorCore::processBlock(juce::AudioBuffer<float>& buffer)
     // 3. Apply Input Gain
     buffer.applyGain(inputGainLinear);
 
-    // 4. Process all 8 bands in cascade sequence
+    // 4. Solo Band Processing (Auto-Solo)
+    if (soloBandIndex >= 0 && soloBandIndex < AUREQ::Params::numBands)
+    {
+        float freq = bands[static_cast<size_t>(soloBandIndex)].getFrequency();
+        float q = bands[static_cast<size_t>(soloBandIndex)].getQ();
+
+        if (soloBandIndex != lastSoloBandIndex)
+        {
+            soloFilter.reset();
+            lastSoloBandIndex = soloBandIndex;
+        }
+
+        soloFilter.setBandPass (freq, q);
+        soloFilter.processBlock (buffer);
+
+        // Safety Guard
+        const int numChannels = buffer.getNumChannels();
+        const int numSamples = buffer.getNumSamples();
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
+            float* channelData = buffer.getWritePointer(channel);
+            for (int sample = 0; sample < numSamples; ++sample)
+            {
+                const float s = channelData[sample];
+                if (std::isnan(s) || std::isinf(s))
+                {
+                    channelData[sample] = 0.0f;
+                }
+            }
+        }
+
+        // Apply Output Gain and exit
+        buffer.applyGain(outputGainLinear);
+        return;
+    }
+    else
+    {
+        lastSoloBandIndex = -1;
+    }
+
+    // 5. Process all 12 bands in cascade sequence
     // The EQBand::processBlock checks internally if enabled, type == Bell, etc.
     for (auto& band : bands)
     {

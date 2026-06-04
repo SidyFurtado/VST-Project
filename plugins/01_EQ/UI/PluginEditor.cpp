@@ -200,6 +200,7 @@ void AureqLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& bu
     g.saveState();
     
     const bool isReset = button.getComponentID() == resetComponentId;
+    const bool isDelete = button.getComponentID() == "delete-button";
     bool isToggled = button.getToggleState();
     
     // Glass base color
@@ -211,6 +212,10 @@ void AureqLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& bu
     else if (isReset)
     {
         baseColor = juce::Colour (251, 191, 36).withAlpha (shouldDrawButtonAsDown ? 0.25f : (shouldDrawButtonAsHighlighted ? 0.16f : 0.08f));
+    }
+    else if (isDelete)
+    {
+        baseColor = juce::Colour (248, 113, 113).withAlpha (shouldDrawButtonAsDown ? 0.25f : (shouldDrawButtonAsHighlighted ? 0.16f : 0.08f));
     }
     else
     {
@@ -231,6 +236,10 @@ void AureqLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& bu
     else if (isReset)
     {
         borderColors = juce::Colour (251, 191, 36).withAlpha (shouldDrawButtonAsHighlighted ? 0.35f : 0.20f);
+    }
+    else if (isDelete)
+    {
+        borderColors = juce::Colour (248, 113, 113).withAlpha (shouldDrawButtonAsHighlighted ? 0.35f : 0.20f);
     }
     else
     {
@@ -259,6 +268,7 @@ void AureqLookAndFeel::drawButtonText (juce::Graphics& g, juce::TextButton& butt
     
     juce::Colour textColor = juce::Colour (248, 250, 252); // Primary light text
     const bool isReset = button.getComponentID() == resetComponentId;
+    const bool isDelete = button.getComponentID() == "delete-button";
     bool isToggled = button.getToggleState();
     
     if (isToggled)
@@ -268,6 +278,10 @@ void AureqLookAndFeel::drawButtonText (juce::Graphics& g, juce::TextButton& butt
     else if (isReset)
     {
         textColor = juce::Colour (251, 191, 36);
+    }
+    else if (isDelete)
+    {
+        textColor = juce::Colour (248, 113, 113);
     }
         
     if (!button.isEnabled())
@@ -351,8 +365,278 @@ void AureqLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton& 
     g.restoreState();
 }
 
+// =============================================================================
+// FloatingBandPanel Implementation
+// =============================================================================
+
+FloatingBandPanel::FloatingBandPanel (AureqAudioProcessor& processor, juce::LookAndFeel& lookAndFeel)
+    : audioProcessor (processor)
+{
+    // Apply LookAndFeel
+    freqSlider.setLookAndFeel (&lookAndFeel);
+    gainSlider.setLookAndFeel (&lookAndFeel);
+    qSlider.setLookAndFeel (&lookAndFeel);
+    dynRangeSlider.setLookAndFeel (&lookAndFeel);
+    bandBypassBtn.setLookAndFeel (&lookAndFeel);
+    removeBandBtn.setLookAndFeel (&lookAndFeel);
+
+    // Setup sliders
+    freqSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    freqSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible (freqSlider);
+
+    gainSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    gainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible (gainSlider);
+
+    qSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    qSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible (qSlider);
+
+    dynRangeSlider.setName ("DynamicRange");
+    dynRangeSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    dynRangeSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible (dynRangeSlider);
+
+    // Setup buttons
+    bandBypassBtn.setButtonText ("Bypass");
+    bandBypassBtn.setComponentID ("aureq-bypass-button");
+    addAndMakeVisible (bandBypassBtn);
+
+    removeBandBtn.setButtonText ("Delete");
+    removeBandBtn.setComponentID ("delete-button");
+    addAndMakeVisible (removeBandBtn);
+
+    // Setup realtime meter label
+    dynGainMeterLabel.setText ("Δ -", juce::dontSendNotification);
+    dynGainMeterLabel.setJustificationType (juce::Justification::centred);
+    dynGainMeterLabel.setFont (juce::Font (juce::FontOptions ("Roboto Mono", 10.0f, juce::Font::bold)));
+    dynGainMeterLabel.setColour (juce::Label::textColourId, juce::Colour (34, 211, 238));
+    addAndMakeVisible (dynGainMeterLabel);
+
+    // Setup slider checkpoint callbacks
+    freqSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
+    gainSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
+    qSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
+    dynRangeSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
+
+    removeBandBtn.onClick = [this]()
+    {
+        if (onDeleteClicked)
+            onDeleteClicked();
+    };
+
+    // Soft drop shadow effect
+    juce::DropShadow shadow;
+    shadow.colour = juce::Colours::black.withAlpha (0.45f);
+    shadow.radius = 16;
+    shadow.offset = juce::Point<int> (0, 4);
+    shadowEffect.setShadowProperties (shadow);
+    setComponentEffect (&shadowEffect);
+}
+
+FloatingBandPanel::~FloatingBandPanel()
+{
+    freqSlider.setLookAndFeel (nullptr);
+    gainSlider.setLookAndFeel (nullptr);
+    qSlider.setLookAndFeel (nullptr);
+    dynRangeSlider.setLookAndFeel (nullptr);
+    bandBypassBtn.setLookAndFeel (nullptr);
+    removeBandBtn.setLookAndFeel (nullptr);
+}
+
+void FloatingBandPanel::updateSelection (int bandIndex)
+{
+    selectedBandIndex = bandIndex;
+
+    freqAttachment.reset();
+    gainAttachment.reset();
+    qAttachment.reset();
+    dynRangeAttachment.reset();
+    bandBypassAttachment.reset();
+
+    if (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands)
+    {
+        freqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
+            audioProcessor.apvts, AUREQ::Params::bandFrequencyID (bandIndex), freqSlider);
+        gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
+            audioProcessor.apvts, AUREQ::Params::bandGainID (bandIndex), gainSlider);
+        qAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
+            audioProcessor.apvts, AUREQ::Params::bandQID (bandIndex), qSlider);
+        dynRangeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
+            audioProcessor.apvts, AUREQ::Params::bandDynamicRangeID (bandIndex), dynRangeSlider);
+        bandBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
+            audioProcessor.apvts, AUREQ::Params::bandBypassID (bandIndex), bandBypassBtn);
+
+        freqSlider.setEnabled (true);
+        gainSlider.setEnabled (true);
+        qSlider.setEnabled (true);
+        bandBypassBtn.setEnabled (true);
+        removeBandBtn.setEnabled (true);
+
+        freqSlider.setAlpha (1.0f);
+        bandBypassBtn.setAlpha (1.0f);
+        removeBandBtn.setAlpha (1.0f);
+
+        // Apply initial visual dimming for Q/Gain/Dyn based on type
+        if (auto* typeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandTypeID (bandIndex)))
+        {
+            int activeType = juce::roundToInt (typeParam->load());
+            bool usesGain = (activeType == 0 || activeType == 3 || activeType == 4);
+            bool usesQ    = (activeType == 0 || activeType == 1 || activeType == 2 || activeType == 5 || activeType == 6);
+            gainSlider.setAlpha (usesGain ? 1.0f : 0.35f);
+            qSlider.setAlpha (usesQ ? 1.0f : 0.35f);
+
+            bool supportsDyn = (activeType == 0 || activeType == 3 || activeType == 4);
+            dynRangeSlider.setEnabled (supportsDyn);
+            dynRangeSlider.setAlpha (supportsDyn ? 1.0f : 0.35f);
+        }
+    }
+    else
+    {
+        freqSlider.setEnabled (false);
+        gainSlider.setEnabled (false);
+        qSlider.setEnabled (false);
+        bandBypassBtn.setEnabled (false);
+        removeBandBtn.setEnabled (false);
+
+        freqSlider.setAlpha (0.35f);
+        gainSlider.setAlpha (0.35f);
+        qSlider.setAlpha (0.35f);
+        bandBypassBtn.setAlpha (0.35f);
+        removeBandBtn.setAlpha (0.35f);
+
+        dynRangeSlider.setEnabled (false);
+        dynRangeSlider.setAlpha (0.35f);
+    }
+}
+
+void FloatingBandPanel::updateThemeColors (const AUREQ::ThemeColors& colors)
+{
+    themeColors = colors;
+
+    freqSlider.setColour (juce::Label::textColourId, colors.textPrimary);
+    gainSlider.setColour (juce::Label::textColourId, colors.textPrimary);
+    qSlider.setColour (juce::Label::textColourId, colors.textPrimary);
+    dynRangeSlider.setColour (juce::Label::textColourId, colors.textPrimary);
+
+    freqSlider.setColour (juce::Slider::rotarySliderOutlineColourId, colors.border.withAlpha (0.4f));
+    freqSlider.setColour (juce::Slider::rotarySliderFillColourId, colors.accent.withAlpha (0.8f));
+    freqSlider.setColour (juce::Slider::thumbColourId, colors.textPrimary);
+
+    gainSlider.setColour (juce::Slider::rotarySliderOutlineColourId, colors.border.withAlpha (0.4f));
+    gainSlider.setColour (juce::Slider::rotarySliderFillColourId, colors.accent.withAlpha (0.8f));
+    gainSlider.setColour (juce::Slider::thumbColourId, colors.textPrimary);
+
+    qSlider.setColour (juce::Slider::rotarySliderOutlineColourId, colors.border.withAlpha (0.4f));
+    qSlider.setColour (juce::Slider::rotarySliderFillColourId, colors.accent.withAlpha (0.8f));
+    qSlider.setColour (juce::Slider::thumbColourId, colors.textPrimary);
+
+    dynRangeSlider.setColour (juce::Slider::rotarySliderOutlineColourId, colors.border.withAlpha (0.4f));
+    dynRangeSlider.setColour (juce::Slider::rotarySliderFillColourId, colors.accent.withAlpha (0.8f));
+    dynRangeSlider.setColour (juce::Slider::thumbColourId, colors.textPrimary);
+
+    repaint();
+}
+
+void FloatingBandPanel::updateRealtimeMeter (const AUREQ::ThemeColors& colors)
+{
+    if (selectedBandIndex < 0 || selectedBandIndex >= AUREQ::Params::numBands)
+    {
+        dynGainMeterLabel.setText ("", juce::dontSendNotification);
+        return;
+    }
+
+    int activeType = 0;
+    if (auto* typeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandTypeID (selectedBandIndex)))
+        activeType = juce::roundToInt (typeParam->load());
+
+    bool supportsDyn = (activeType == 0 || activeType == 3 || activeType == 4);
+    if (supportsDyn)
+    {
+        auto* pDynRange = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandDynamicRangeID (selectedBandIndex));
+        bool isDynEnabled = (pDynRange != nullptr) ? (std::abs (pDynRange->load()) > 1e-4f) : false;
+
+        if (isDynEnabled)
+        {
+            float dynamicGainDb = audioProcessor.getBandDynamicGainDb (selectedBandIndex);
+            if (std::abs (dynamicGainDb) > 0.05f)
+            {
+                juce::String text = "Δ " + (dynamicGainDb >= 0.0f ? juce::String ("+") : juce::String()) + juce::String (dynamicGainDb, 1) + " dB";
+                dynGainMeterLabel.setText (text, juce::dontSendNotification);
+
+                juce::Colour meterColor = (dynamicGainDb > 0.0f) ? colors.accent : colors.accentSoft;
+                dynGainMeterLabel.setColour (juce::Label::textColourId, meterColor);
+                dynGainMeterLabel.setAlpha (1.0f);
+            }
+            else
+            {
+                dynGainMeterLabel.setText ("Δ 0.0 dB", juce::dontSendNotification);
+                dynGainMeterLabel.setColour (juce::Label::textColourId, colors.textPrimary);
+                dynGainMeterLabel.setAlpha (1.0f);
+            }
+        }
+        else
+        {
+            dynGainMeterLabel.setText ("Δ -", juce::dontSendNotification);
+            dynGainMeterLabel.setColour (juce::Label::textColourId, colors.textSecondary.withAlpha (0.4f));
+            dynGainMeterLabel.setAlpha (0.35f);
+        }
+    }
+    else
+    {
+        dynGainMeterLabel.setText ("", juce::dontSendNotification);
+        dynGainMeterLabel.setAlpha (0.0f);
+    }
+}
+
+void FloatingBandPanel::paint (juce::Graphics& g)
+{
+    auto bounds = getLocalBounds().toFloat();
+    
+    // Glass panel simulation (semitransparent background)
+    g.setColour (themeColors.panelElevated.withAlpha (0.85f));
+    g.fillRoundedRectangle (bounds, 12.0f);
+    
+    // Border
+    g.setColour (themeColors.border.withAlpha (0.25f));
+    g.drawRoundedRectangle (bounds, 12.0f, 1.0f);
+}
+
+void FloatingBandPanel::resized()
+{
+    int panelW = getWidth();
+    int panelH = getHeight();
+
+    // Concentric sliders in the center (center is X = panelW/2, Y = 50)
+    int centerX = panelW / 2;
+    int centerY = 50;
+
+    // dynRangeSlider: 76x82 (concentric)
+    dynRangeSlider.setBounds (centerX - 38, centerY - 41, 76, 82);
+    // gainSlider: 60x66 (concentric)
+    gainSlider.setBounds (centerX - 30, centerY - 33, 60, 66);
+    gainSlider.toFront (false);
+
+    // Lateral knobs (Y = centerY - 27, W = 48, H = 54)
+    freqSlider.setBounds (15, centerY - 27, 48, 54);
+    qSlider.setBounds (panelW - 15 - 48, centerY - 27, 48, 54);
+
+    // Meter Label right below concentric sliders
+    dynGainMeterLabel.setBounds (centerX - 60, centerY + 43, 120, 12);
+
+    // Bypass and Delete buttons at the bottom (Y = panelH - 28, height = 20)
+    int btnH = 20;
+    int btnW = 76;
+    int btnY = panelH - 28;
+
+    bandBypassBtn.setBounds (15, btnY, btnW, btnH);
+    removeBandBtn.setBounds (panelW - 15 - btnW, btnY, btnW, btnH);
+}
+
 AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+      floatingPanel (p, aureqLookAndFeel)
 {
     setWantsKeyboardFocus (true);
     currentLanguage = loadLanguagePreference();
@@ -360,17 +644,10 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     // Apply LookAndFeel
     inputGainSlider.setLookAndFeel (&aureqLookAndFeel);
     outputGainSlider.setLookAndFeel (&aureqLookAndFeel);
-    freqSlider.setLookAndFeel (&aureqLookAndFeel);
-    gainSlider.setLookAndFeel (&aureqLookAndFeel);
-    qSlider.setLookAndFeel (&aureqLookAndFeel);
-    
-    dynRangeSlider.setLookAndFeel (&aureqLookAndFeel);
     
     globalBypassButton.setLookAndFeel (&aureqLookAndFeel);
     themeToggleButton.setLookAndFeel (&aureqLookAndFeel);
-    bandBypassBtn.setLookAndFeel (&aureqLookAndFeel);
     addBandBtn.setLookAndFeel (&aureqLookAndFeel);
-    removeBandBtn.setLookAndFeel (&aureqLookAndFeel);
     
     // Apply LookAndFeel to header buttons
     prevPresetBtn.setLookAndFeel (&aureqLookAndFeel);
@@ -382,7 +659,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     resetBtn.setLookAndFeel (&aureqLookAndFeel);
 
     globalBypassButton.setComponentID (bypassComponentId);
-    bandBypassBtn.setComponentID (bypassComponentId);
     bypassHeaderBtn.setComponentID (bypassComponentId);
     themeToggleButton.setComponentID (themeComponentId);
     themeHeaderBtn.setComponentID (themeComponentId);
@@ -397,24 +673,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     outputGainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (outputGainSlider);
     
-    freqSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    freqSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible (freqSlider);
-    
-    gainSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    gainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible (gainSlider);
-    
-    qSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    qSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible (qSlider);
-    
-    // Dynamic EQ Controls setup
-    dynRangeSlider.setName ("DynamicRange");
-    dynRangeSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    dynRangeSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible (dynRangeSlider);
-    
     // Global Buttons setup
     globalBypassButton.setButtonText ("Bypass");
     addAndMakeVisible (globalBypassButton);
@@ -422,14 +680,12 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     themeToggleButton.setButtonText ("Theme");
     addAndMakeVisible (themeToggleButton);
     
-    bandBypassBtn.setButtonText ("Bypass");
-    addAndMakeVisible (bandBypassBtn);
-
     addBandBtn.setButtonText ("+ Band");
     addAndMakeVisible (addBandBtn);
 
-    removeBandBtn.setButtonText ("Remove");
-    addAndMakeVisible (removeBandBtn);
+    // Add floating panel
+    addAndMakeVisible (floatingPanel);
+    floatingPanel.setVisible (false);
 
     // Setup + Band onClick
     addBandBtn.onClick = [this]()
@@ -493,8 +749,8 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
         }
     };
 
-    // Setup Remove onClick
-    removeBandBtn.onClick = [this]()
+    // Setup Floating Panel Delete Action
+    floatingPanel.onDeleteClicked = [this]()
     {
         int bandIdx = graphView.getSelectedBandIndex();
         if (bandIdx >= 0 && bandIdx < AUREQ::Params::numBands)
@@ -548,37 +804,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     addAndMakeVisible (bypassHeaderBtn);
     resetBtn.setButtonText ("Reset");
     addAndMakeVisible (resetBtn);
-
-    // Channel Mode Buttons setup
-    juce::StringArray chModeNames { "ST", "M", "S", "L", "R" };
-    for (int i = 0; i < 5; ++i)
-    {
-        channelModeButtons[i].setButtonText (chModeNames[i]);
-        channelModeButtons[i].setLookAndFeel (&aureqLookAndFeel);
-        channelModeButtons[i].setClickingTogglesState (false);
-        addAndMakeVisible (channelModeButtons[i]);
-        
-        channelModeButtons[i].onClick = [this, i]()
-        {
-            int bandIdx = graphView.getSelectedBandIndex();
-            if (bandIdx >= 0 && bandIdx < AUREQ::Params::numBands)
-            {
-                if (auto* currentMode = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandChannelModeID (bandIdx)))
-                {
-                    if (juce::roundToInt (currentMode->load()) == i)
-                        return;
-                }
-
-                if (auto* chModeParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandChannelModeID (bandIdx)))
-                {
-                    audioProcessor.captureUndoCheckpoint();
-                    chModeParam->beginChangeGesture();
-                    chModeParam->setValueNotifyingHost (chModeParam->convertTo0to1 (static_cast<float>(i)));
-                    chModeParam->endChangeGesture();
-                }
-            }
-        };
-    }
     
     // Preset Label
     presetLabel.setText (audioProcessor.getCurrentPresetName(), juce::dontSendNotification);
@@ -588,14 +813,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     presetLabel.addMouseListener (this, false);
     abBtn.addMouseListener (this, false);
     globalBypassButton.addMouseListener (this, false);
-    bandBypassBtn.addMouseListener (this, false);
-    
-    // Dynamic EQ Gain Meter Label
-    dynGainMeterLabel.setText ("Δ -", juce::dontSendNotification);
-    dynGainMeterLabel.setJustificationType (juce::Justification::centred);
-    dynGainMeterLabel.setFont (juce::Font (juce::FontOptions ("Roboto Mono", 10.0f, juce::Font::bold)));
-    dynGainMeterLabel.setColour (juce::Label::textColourId, juce::Colour (34, 211, 238)); // Cyan
-    addAndMakeVisible (dynGainMeterLabel);
     
     // Setup preset cycling callback
     prevPresetBtn.onClick = [this]()
@@ -681,10 +898,6 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
 
     inputGainSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
     outputGainSlider.onDragStart = [this]() { audioProcessor.captureUndoCheckpoint(); };
-    freqSlider.onDragStart = [this]() { captureSelectedBandGestureCheckpoint(); };
-    gainSlider.onDragStart = [this]() { captureSelectedBandGestureCheckpoint(); };
-    qSlider.onDragStart = [this]() { captureSelectedBandGestureCheckpoint(); };
-    dynRangeSlider.onDragStart = [this]() { captureSelectedBandGestureCheckpoint(); };
 
     // Setup band drag callbacks
     graphView.onDragStart = [this] (int bandIndex)
@@ -703,6 +916,8 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
             freqParam->setValueNotifyingHost (freqParam->convertTo0to1 (frequencyHz));
         if (auto* gainParam = audioProcessor.apvts.getParameter (AUREQ::Params::bandGainID (bandIndex)))
             gainParam->setValueNotifyingHost (gainParam->convertTo0to1 (gainDb));
+
+        updateSelectedBandControls();
     };
 
     graphView.onDragEnd = [this] (int bandIndex)
@@ -729,6 +944,12 @@ AureqAudioProcessorEditor::AureqAudioProcessorEditor (AureqAudioProcessor& p)
     {
         juce::ignoreUnused (newIndex);
         updateSelectedBandControls();
+    };
+
+    // Setup band solo status changed callback
+    graphView.onBandSoloStatusChanged = [this] (int bandIdx, bool isSolo)
+    {
+        audioProcessor.soloBandIndex.store (isSolo ? bandIdx : -1);
     };
 
     // Setup band create requested callback (double-click in EQGraphView)
@@ -959,7 +1180,6 @@ AureqAudioProcessorEditor::~AureqAudioProcessorEditor()
     presetLabel.removeMouseListener (this);
     abBtn.removeMouseListener (this);
     globalBypassButton.removeMouseListener (this);
-    bandBypassBtn.removeMouseListener (this);
     audioProcessor.apvts.removeParameterListener (AUREQ::Params::themeModeID(), this);
 
     if (saveUserPresetAlert != nullptr)
@@ -971,15 +1191,9 @@ AureqAudioProcessorEditor::~AureqAudioProcessorEditor()
     // Clean up LookAndFeels
     inputGainSlider.setLookAndFeel (nullptr);
     outputGainSlider.setLookAndFeel (nullptr);
-    freqSlider.setLookAndFeel (nullptr);
-    gainSlider.setLookAndFeel (nullptr);
-    qSlider.setLookAndFeel (nullptr);
-    
-    dynRangeSlider.setLookAndFeel (nullptr);
     
     globalBypassButton.setLookAndFeel (nullptr);
     themeToggleButton.setLookAndFeel (nullptr);
-    bandBypassBtn.setLookAndFeel (nullptr);
     
     // Clean up header buttons LookAndFeel
     prevPresetBtn.setLookAndFeel (nullptr);
@@ -990,11 +1204,7 @@ AureqAudioProcessorEditor::~AureqAudioProcessorEditor()
     bypassHeaderBtn.setLookAndFeel (nullptr);
     resetBtn.setLookAndFeel (nullptr);
 
-    for (int i = 0; i < 5; ++i)
-        channelModeButtons[i].setLookAndFeel (nullptr);
-        
     addBandBtn.setLookAndFeel (nullptr);
-    removeBandBtn.setLookAndFeel (nullptr);
 }
 
 bool AureqAudioProcessorEditor::keyPressed (const juce::KeyPress& key)
@@ -1021,8 +1231,8 @@ void AureqAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 {
     if (event.eventComponent == &globalBypassButton && globalBypassButton.isEnabled())
         audioProcessor.captureUndoCheckpoint();
-    else if (event.eventComponent == &bandBypassBtn
-             && bandBypassBtn.isEnabled()
+    else if (event.eventComponent == &floatingPanel.bandBypassBtn
+             && floatingPanel.bandBypassBtn.isEnabled()
              && graphView.getSelectedBandIndex() >= 0
              && graphView.getSelectedBandIndex() < AUREQ::Params::numBands)
         audioProcessor.captureUndoCheckpoint();
@@ -1078,10 +1288,10 @@ void AureqAudioProcessorEditor::applyLocalizedTexts()
     themeToggleButton.setButtonText (text (AUREQ::TextKey::Theme));
     bypassHeaderBtn.setButtonText (text (AUREQ::TextKey::Bypass));
     globalBypassButton.setButtonText (text (AUREQ::TextKey::Bypass));
-    bandBypassBtn.setButtonText (text (AUREQ::TextKey::Bypass));
+    floatingPanel.bandBypassBtn.setButtonText (text (AUREQ::TextKey::Bypass));
     resetBtn.setButtonText (text (AUREQ::TextKey::Reset));
     addBandBtn.setButtonText (text (AUREQ::TextKey::AddBand));
-    removeBandBtn.setButtonText (text (AUREQ::TextKey::Remove));
+    floatingPanel.removeBandBtn.setButtonText (text (AUREQ::TextKey::Remove));
 
     graphView.setLanguage (currentLanguage);
     repaint();
@@ -1720,18 +1930,6 @@ void AureqAudioProcessorEditor::paint (juce::Graphics& g)
     juce::Rectangle<int> bottomBarArea (24, 402, getWidth() - 48, 116);
     drawSoftShadow (g, bottomBarArea, 10, 0.20f, currentColors.shadow, 14.0f);
     drawGlassPanel (g, bottomBarArea.toFloat(), currentColors.topBar, 14.0f);
-    
-    // Draw Selected Band container card inside bottom panel
-    int bottomY = bottomBarArea.getY();
-    juce::Rectangle<float> selectedBandCard (210.0f, 408.0f, 530.0f, 104.0f);
-    int bandIndex = graphView.getSelectedBandIndex();
-    bool hasSelection = (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands);
-    
-    // Lighter, highly transparent glass container for the active band section
-    juce::Colour cardColor = hasSelection ? currentColors.panel.brighter (0.03f).withAlpha (0.16f) 
-                                          : currentColors.panel.withAlpha (0.05f);
-    drawGlassPanel (g, selectedBandCard, cardColor, 10.0f);
-    
     // Draw labels above bottom knobs
     g.setColour (currentColors.textSecondary.withAlpha (0.75f));
     g.setFont (juce::Font (juce::FontOptions ("Inter", 8.0f, juce::Font::bold)));
@@ -1739,45 +1937,6 @@ void AureqAudioProcessorEditor::paint (juce::Graphics& g)
     // Global Knob Titles
     g.drawText (text (AUREQ::TextKey::InputGain), 48, 414, 64, 12, juce::Justification::centred, true);
     g.drawText (text (AUREQ::TextKey::OutputGain), 788, 414, 64, 12, juce::Justification::centred, true);
-    
-    if (hasSelection)
-    {
-        // Selected Band Title: Premium typography with letter spacing, aligned left to make room for buttons
-        juce::String bandTitle = text (AUREQ::TextKey::Band) + " " + juce::String (bandIndex + 1);
-        g.setColour (currentColors.accent);
-        g.setFont (juce::Font (juce::FontOptions ("Inter", 10.0f, juce::Font::bold)));
-        g.drawText (bandTitle, 216, bottomY + 12, 44, 18, juce::Justification::centred, true);
-        
-        // Knob Labels inside selected band card (shifted down to Y = 436)
-        g.setColour (currentColors.textSecondary.withAlpha (0.65f));
-        g.setFont (juce::Font (juce::FontOptions ("Inter", 8.0f, juce::Font::bold)));
-        g.drawText (text (AUREQ::TextKey::Frequency), 220, 436, 60, 12, juce::Justification::centred, true);
-        g.drawText (text (AUREQ::TextKey::Gain), 285, 436, 60, 12, juce::Justification::centred, true);
-        g.drawText (text (AUREQ::TextKey::QFactor), 350, 436, 60, 12, juce::Justification::centred, true);
-        
-
-
-        // Draw sutil separators (low opacity)
-        juce::Colour sepColor = currentColors.border.withAlpha (currentMode == AUREQ::ThemeMode::Dark ? 0.10f : 0.25f);
-        g.setColour (sepColor);
-        
-        // Vertical line at X = 418 (separates Knobs from Stereo Placement & Metering)
-        g.drawVerticalLine (418, bottomY + 10.0f, bottomY + 104.0f);
-        
-        // Vertical line at X = 666 (actions separator - full height)
-        g.drawVerticalLine (666, bottomY + 10.0f, bottomY + 104.0f);
-
-        // Draw Group Micro Headers
-        g.setColour (currentColors.textSecondary.withAlpha (0.45f));
-        g.setFont (juce::Font (juce::FontOptions ("Inter", 7.0f, juce::Font::bold)));
-        g.drawText (text (AUREQ::TextKey::ChannelMode), 430, bottomY + 4, 110, 10, juce::Justification::centred, true);
-    }
-    else
-    {
-        g.setColour (currentColors.textSecondary.withAlpha (0.35f));
-        g.setFont (juce::Font (juce::FontOptions ("Inter", 8.5f, juce::Font::bold)));
-        g.drawText (text (AUREQ::TextKey::SelectBandToEdit), 210, 454, 530, 14, juce::Justification::centred, true);
-    }
 
     // 6. Draw Footer
     juce::Rectangle<int> footerArea (24, getHeight() - 28, getWidth() - 48, 20);
@@ -1864,36 +2023,13 @@ void AureqAudioProcessorEditor::resized()
     
     // Sliders (Aligned at Y = bottomY + 30, height = 72)
     inputGainSlider.setBounds (48, bottomY + 30, 64, 72);
-    
-    // Shift output gain slider and global bypass slightly right to accommodate wider selected band card
     outputGainSlider.setBounds (816, bottomY + 30, 52, 72);
+    
     globalBypassButton.setBounds (750, bottomY + 54, 60, 24);
-    
-    // Selected Band Sliders (each width 60, height 66, starting at X = 220)
-    freqSlider.setBounds (220, bottomY + 38, 60, 66);
-    gainSlider.setBounds (285, bottomY + 38, 60, 66);
-    qSlider.setBounds (350, bottomY + 38, 60, 66);
-    
-    // Dynamic EQ range concentric ring (76x82 concentric with 60x66 gainSlider at center 315, bottomY + 71)
-    dynRangeSlider.setBounds (277, bottomY + 30, 76, 82);
-    gainSlider.toFront (false);
-    
-    // Dynamic EQ Gain Meter Label (placed to the right of Q knob)
-    dynGainMeterLabel.setBounds (430, bottomY + 54, 180, 18);
     
     // Toggles/Buttons (Vertically aligned at Y = bottomY + 54, height = 24)
     addBandBtn.setBounds (126, bottomY + 20, 80, 24);
     themeToggleButton.setBounds (126, bottomY + 54, 80, 24);
-    
-    // Selected Band Action Buttons (Shifted to X = 670, width = 60)
-    bandBypassBtn.setBounds (670, bottomY + 14, 60, 20);
-    removeBandBtn.setBounds (670, bottomY + 38, 60, 20);
-    
-    // Channel Mode Buttons (Y = bottomY + 14, height = 18, width = 20, gap = 2, starts at X = 430)
-    for (int i = 0; i < 5; ++i)
-    {
-        channelModeButtons[i].setBounds (430 + i * 22, bottomY + 14, 20, 18);
-    }
 }
 
 void AureqAudioProcessorEditor::parameterChanged (const juce::String& parameterID, float newValue)
@@ -1933,36 +2069,17 @@ void AureqAudioProcessorEditor::updateTheme()
     // Propagate theme colors to controls
     inputGainSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
     outputGainSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
-    freqSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
-    gainSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
-    qSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
-    
-    dynRangeSlider.setColour (juce::Label::textColourId, currentColors.textPrimary);
     
     inputGainSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
     outputGainSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
-    freqSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
-    gainSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
-    qSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
-    
-    dynRangeSlider.setColour (juce::Slider::rotarySliderFillColourId, currentColors.accent);
     
     inputGainSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
     outputGainSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
-    freqSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
-    gainSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
-    qSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
-    
-    dynRangeSlider.setColour (juce::Slider::rotarySliderOutlineColourId, currentColors.gridLine);
     
     inputGainSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
     outputGainSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
-    freqSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
-    gainSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
-    qSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
     
-    dynRangeSlider.setColour (juce::Slider::thumbColourId, currentColors.panelElevated.withAlpha(1.0f));
-    
+    floatingPanel.updateThemeColors (currentColors);
     repaint();
 }
 
@@ -2012,12 +2129,11 @@ void AureqAudioProcessorEditor::timerCallback()
     }
     
     graphView.setBands (visualBands);
-
-    // Update filter type buttons and knob dimming/relevance
+ 
+    // Sync if the selected band is disabled externally (e.g., host automation)
     int bandIndex = graphView.getSelectedBandIndex();
     if (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands)
     {
-        // Sync if the selected band is disabled externally (e.g., host automation)
         if (auto* enabledParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandEnabledID (bandIndex)))
         {
             if (enabledParam->load() < 0.5f)
@@ -2040,92 +2156,18 @@ void AureqAudioProcessorEditor::timerCallback()
             }
         }
     }
-
-    if (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands)
+ 
+    if (floatingPanel.isVisible())
     {
-        if (auto* typeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandTypeID (bandIndex)))
-        {
-            int activeType = juce::roundToInt (typeParam->load());
-            
-            if (auto* channelModeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandChannelModeID (bandIndex)))
-            {
-                int activeMode = juce::roundToInt (channelModeParam->load());
-                for (int i = 0; i < 5; ++i)
-                {
-                    channelModeButtons[i].setToggleState (i == activeMode, juce::dontSendNotification);
-                }
-            }
-            
-            bool usesGain = (activeType == 0 || activeType == 3 || activeType == 4);
-            bool usesQ    = (activeType == 0 || activeType == 1 || activeType == 2 || activeType == 5 || activeType == 6);
-            
-            gainSlider.setAlpha (usesGain ? 1.0f : 0.35f);
-            qSlider.setAlpha (usesQ ? 1.0f : 0.35f);
-            
-            // Dynamic EQ support check (Bell, Low Shelf, High Shelf)
-            bool supportsDyn = (activeType == 0 || activeType == 3 || activeType == 4);
-            
-            dynRangeSlider.setEnabled (supportsDyn);
-            dynRangeSlider.setAlpha (supportsDyn ? 1.0f : 0.35f);
-
-            // Update Dynamic EQ Gain Meter Label (Selected Band Card)
-            if (supportsDyn)
-            {
-                auto* pDynRange = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandDynamicRangeID (bandIndex));
-                bool isDynEnabled = (pDynRange != nullptr) ? (std::abs (pDynRange->load()) > 1e-4f) : false;
-                
-                if (isDynEnabled)
-                {
-                    float dynamicGainDb = audioProcessor.getBandDynamicGainDb (bandIndex);
-                    if (std::abs (dynamicGainDb) > 0.05f)
-                    {
-                        juce::String text = "Δ " + (dynamicGainDb >= 0.0f ? juce::String ("+") : juce::String()) + juce::String (dynamicGainDb, 1) + " dB";
-                        dynGainMeterLabel.setText (text, juce::dontSendNotification);
-                        
-                        juce::Colour meterColor = (dynamicGainDb > 0.0f) ? currentColors.accent : currentColors.accentSoft;
-                        dynGainMeterLabel.setColour (juce::Label::textColourId, meterColor);
-                        dynGainMeterLabel.setAlpha (1.0f);
-                    }
-                    else
-                    {
-                        dynGainMeterLabel.setText ("Δ 0.0 dB", juce::dontSendNotification);
-                        dynGainMeterLabel.setColour (juce::Label::textColourId, currentColors.textPrimary);
-                        dynGainMeterLabel.setAlpha (1.0f);
-                    }
-                }
-                else
-                {
-                    dynGainMeterLabel.setText ("Δ -", juce::dontSendNotification);
-                    dynGainMeterLabel.setColour (juce::Label::textColourId, currentColors.textSecondary.withAlpha (0.4f));
-                    dynGainMeterLabel.setAlpha (0.35f);
-                }
-            }
-            else
-            {
-                dynGainMeterLabel.setText ("", juce::dontSendNotification);
-                dynGainMeterLabel.setAlpha (0.0f);
-            }
-        }
+        floatingPanel.updateRealtimeMeter (currentColors);
     }
-    else
-    {
-        dynRangeSlider.setEnabled (false);
-        dynRangeSlider.setAlpha (0.35f);
-
-        dynGainMeterLabel.setText ("Δ -", juce::dontSendNotification);
-        dynGainMeterLabel.setColour (juce::Label::textColourId, currentColors.textSecondary.withAlpha (0.4f));
-        dynGainMeterLabel.setAlpha (0.35f);
-    }
-
+ 
     // --- Spectrum Analyzer Update ---
-    // Drain all available samples from the lock-free FIFO into the AnalyzerProcessor.
-    // The stack buffer of 512 floats is cheap: it avoids heap allocation on the message thread.
     float tempBuf[512];
     int available;
     while ((available = audioProcessor.analyzerFifo.pop (tempBuf, 512)) > 0)
         analyzerProcessor.pushSamples (tempBuf, available);
-
-    // Push the latest smoothed spectrum bins to the graph view.
+ 
     graphView.setSpectrumData (analyzerProcessor.getBins(), analyzerProcessor.getNumBins());
     
     // Update preset label text periodically
@@ -2136,96 +2178,51 @@ void AureqAudioProcessorEditor::updateSelectedBandControls()
 {
     int bandIndex = graphView.getSelectedBandIndex();
     
-    // 1. Destruct old attachments
-    freqAttachment.reset();
-    gainAttachment.reset();
-    qAttachment.reset();
-    bandBypassAttachment.reset();
-    dynRangeAttachment.reset();
-    
     if (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands)
     {
-        // 2. Re-attach to the selected band
-        freqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-            audioProcessor.apvts, AUREQ::Params::bandFrequencyID (bandIndex), freqSlider);
-        gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-            audioProcessor.apvts, AUREQ::Params::bandGainID (bandIndex), gainSlider);
-        qAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-            audioProcessor.apvts, AUREQ::Params::bandQID (bandIndex), qSlider);
-        bandBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
-            audioProcessor.apvts, AUREQ::Params::bandBypassID (bandIndex), bandBypassBtn);
-        dynRangeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-            audioProcessor.apvts, AUREQ::Params::bandDynamicRangeID (bandIndex), dynRangeSlider);
-            
-        // Enable controls
-        freqSlider.setEnabled (true);
-        gainSlider.setEnabled (true);
-        qSlider.setEnabled (true);
-        bandBypassBtn.setEnabled (true);
-        removeBandBtn.setEnabled (true);
+        floatingPanel.updateSelection (bandIndex);
+        floatingPanel.setVisible (true);
         
-        freqSlider.setAlpha (1.0f);
-        bandBypassBtn.setAlpha (1.0f);
-        removeBandBtn.setAlpha (1.0f);
+        // Calculate coordinates and set bounds with collision checking
+        float freq = 1000.0f;
+        float gain = 0.0f;
+        if (auto* freqParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandFrequencyID (bandIndex)))
+            freq = freqParam->load();
+        if (auto* gainParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandGainID (bandIndex)))
+            gain = gainParam->load();
 
-        // Show and enable channel mode buttons
-        for (int i = 0; i < 5; ++i)
+        float graphX = graphView.frequencyToX (freq);
+        float graphY = graphView.gainToY (gain);
+
+        // Convert point to editor coordinate system
+        juce::Point<int> editorPos = getLocalPoint (&graphView, juce::Point<float>(graphX, graphY)).roundToInt();
+        
+        int panelW = 240; // width of floating panel
+        int panelH = 140; // height of floating panel
+        
+        int nodeX = editorPos.getX();
+        int nodeY = editorPos.getY();
+
+        int targetX = nodeX - panelW / 2;
+        int targetY = nodeY + 30; // 30px offset below node
+
+        // Check vertical collision - if it goes off bottom, show above node instead
+        if (targetY + panelH > 480) 
         {
-            channelModeButtons[i].setEnabled (true);
-            channelModeButtons[i].setAlpha (1.0f);
+            targetY = nodeY - panelH - 30; // show 30px above node
         }
 
-        // Apply initial visual dimming for Q/Gain based on active type
-        if (auto* typeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandTypeID (bandIndex)))
-        {
-            int activeType = juce::roundToInt (typeParam->load());
-            bool usesGain = (activeType == 0 || activeType == 3 || activeType == 4);
-            bool usesQ    = (activeType == 0 || activeType == 1 || activeType == 2 || activeType == 5 || activeType == 6);
-            gainSlider.setAlpha (usesGain ? 1.0f : 0.35f);
-            qSlider.setAlpha (usesQ ? 1.0f : 0.35f);
-            
-            if (auto* channelModeParam = audioProcessor.apvts.getRawParameterValue (AUREQ::Params::bandChannelModeID (bandIndex)))
-            {
-                int activeMode = juce::roundToInt (channelModeParam->load());
-                for (int i = 0; i < 5; ++i)
-                {
-                    channelModeButtons[i].setToggleState (i == activeMode, juce::dontSendNotification);
-                }
-            }
-            
-            // Initial dynamic control enable/disable
-            bool supportsDyn = (activeType == 0 || activeType == 3 || activeType == 4);
-            dynRangeSlider.setEnabled (supportsDyn);
-            dynRangeSlider.setAlpha (supportsDyn ? 1.0f : 0.35f);
-        }
+        // Horizontal and vertical boundaries check
+        targetX = juce::jlimit (10, getWidth() - panelW - 10, targetX);
+        targetY = juce::jlimit (10, getHeight() - panelH - 10, targetY);
+
+        floatingPanel.setBounds (targetX, targetY, panelW, panelH);
+        floatingPanel.toFront (false);
     }
     else
     {
-        // Disable controls
-        freqSlider.setEnabled (false);
-        gainSlider.setEnabled (false);
-        qSlider.setEnabled (false);
-        bandBypassBtn.setEnabled (false);
-        removeBandBtn.setEnabled (false);
-        
-        freqSlider.setAlpha (0.35f);
-        gainSlider.setAlpha (0.35f);
-        qSlider.setAlpha (0.35f);
-        bandBypassBtn.setAlpha (0.35f);
-        removeBandBtn.setAlpha (0.35f);
-
-        // Disable and dim channel mode buttons
-        for (int i = 0; i < 5; ++i)
-        {
-            channelModeButtons[i].setEnabled (false);
-            channelModeButtons[i].setAlpha (0.35f);
-            channelModeButtons[i].setToggleState (false, juce::dontSendNotification);
-        }
-        
-        // Disable and dim dynamic controls
-        dynRangeSlider.setEnabled (false);
-        dynRangeSlider.setAlpha (0.35f);
+        floatingPanel.updateSelection (-1);
+        floatingPanel.setVisible (false);
     }
-    
     repaint();
 }

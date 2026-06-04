@@ -43,6 +43,7 @@ public:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts;
+    std::atomic<int> soloBandIndex { -1 };
 
     // Lock-free FIFO for audio → UI spectrum analyzer data transport.
     // Public so the PluginEditor timer can drain it without indirection.

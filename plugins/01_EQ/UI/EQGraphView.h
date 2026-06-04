@@ -80,6 +80,7 @@ namespace AUREQ
         std::function<void(int bandIndex, float q)> onBandQChanged;
         std::function<void(float frequencyHz, float gainDb)> onBandCreateRequested;
         std::function<void(int bandIndex, juce::Point<int> screenPosition)> onBandContextMenuRequested;
+        std::function<void(int bandIndex, bool isSolo)> onBandSoloStatusChanged;
 
     private:
         ThemeColors themeColors;
