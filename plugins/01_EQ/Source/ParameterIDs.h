@@ -4,7 +4,7 @@
 
 namespace AUREQ::Params
 {
-    inline constexpr int numBands = 8;
+    inline constexpr int numBands = 12;
 
     // Helper para validação de índice
     bool isValidBandIndex(int bandIndex);

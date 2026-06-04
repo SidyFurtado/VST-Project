@@ -66,6 +66,26 @@ public:
     void setBandPass(float frequencyHz, float q);
 
     /**
+     * High-Pass filter 1st-order (6 dB/oct).
+     */
+    void setHighPassFirstOrder(float frequencyHz);
+
+    /**
+     * Low-Pass filter 1st-order (6 dB/oct).
+     */
+    void setLowPassFirstOrder(float frequencyHz);
+
+    /**
+     * Low Shelf filter 1st-order (6 dB/oct).
+     */
+    void setLowShelfFirstOrder(float frequencyHz, float gainDb);
+
+    /**
+     * High Shelf filter 1st-order (6 dB/oct).
+     */
+    void setHighShelfFirstOrder(float frequencyHz, float gainDb);
+
+    /**
      * Processes a single sample on a given channel.
      */
     float processSample(int channel, float inputSample) noexcept;

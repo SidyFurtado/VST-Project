@@ -109,9 +109,10 @@ private:
     juce::ToggleButton bandBypassBtn;
     juce::TextButton addBandBtn { "+ Band" };
     juce::TextButton removeBandBtn { "Remove" };
+    juce::TextButton slope6Btn  { "6" };
     juce::TextButton slope12Btn { "12" };
+    juce::TextButton slope18Btn { "18" };
     juce::TextButton slope24Btn { "24" };
-    juce::TextButton slope48Btn { "48" };
 
     // Header buttons (placeholders / toggle)
     juce::TextButton prevPresetBtn { "<" };

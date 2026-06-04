@@ -87,7 +87,7 @@ private:
     float releaseCoeff = 0.99f;
 
     BiquadFilter filter;
-    std::array<BiquadFilter, 3> extraCutFilters;
+    std::array<BiquadFilter, 1> extraFilters;
     ParameterSmoother freqSmoother;
     ParameterSmoother gainSmoother;
     ParameterSmoother qSmoother;

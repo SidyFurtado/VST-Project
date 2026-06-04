@@ -29,9 +29,11 @@ namespace AUREQ
         constexpr float highCutType = 2.0f;
         constexpr float lowShelfType = 3.0f;
         constexpr float highShelfType = 4.0f;
-        constexpr float slope12 = 0.0f;
-        constexpr float slope24 = 1.0f;
-        constexpr float slope48 = 2.0f;
+        constexpr float slope6  = 0.0f;
+        constexpr float slope12 = 1.0f;
+        constexpr float slope18 = 2.0f;
+        constexpr float slope24 = 3.0f;
+        constexpr float slope48 = 3.0f; // Map legacy 48 dB/oct to 24 dB/oct
         constexpr float midMode = 1.0f;
         constexpr float sideMode = 2.0f;
 

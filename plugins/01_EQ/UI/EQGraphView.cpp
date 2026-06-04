@@ -29,7 +29,7 @@ namespace AUREQ
         repaint();
     }
 
-    void EQGraphView::setBands(const std::array<VisualEQBand, 8>& newBands)
+    void EQGraphView::setBands(const std::array<VisualEQBand, AUREQ::Params::numBands>& newBands)
     {
         bands = newBands;
         repaint();
@@ -292,42 +292,89 @@ namespace AUREQ
                             totalDb += gainDb * shape;
                             break;
                         }
-                        case 1: // Low Cut (High-Pass) — rolloff below f0
+                        case 1: // Low Cut (High-Pass)
                         {
                             float ratio = freq / f0;
-                            float rolloff = 1.0f - 1.0f / (1.0f + ratio * ratio * q * q);
-                            float attenuationDb = 20.0f * std::log10(std::max(1e-6f, rolloff));
+                            float magSq = 1.0f;
                             
-                            int numStages = 1;
-                            if (band.slope == 24) numStages = 2;
-                            else if (band.slope == 48) numStages = 4;
+                            if (band.slope == 6)
+                            {
+                                magSq = (ratio * ratio) / (1.0f + ratio * ratio);
+                            }
+                            else if (band.slope == 12)
+                            {
+                                float denom = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                magSq = (ratio * ratio * ratio * ratio) / std::max(1e-12f, denom);
+                            }
+                            else if (band.slope == 18)
+                            {
+                                float magSq1 = (ratio * ratio) / (1.0f + ratio * ratio);
+                                float denom2 = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                float magSq2 = (ratio * ratio * ratio * ratio) / std::max(1e-12f, denom2);
+                                magSq = magSq1 * magSq2;
+                            }
+                            else // 24
+                            {
+                                float denom = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                float singleMagSq = (ratio * ratio * ratio * ratio) / std::max(1e-12f, denom);
+                                magSq = singleMagSq * singleMagSq;
+                            }
                             
-                            totalDb += juce::jlimit(-48.0f, 0.0f, numStages * attenuationDb);
+                            float attenuationDb = 10.0f * std::log10(std::max(1e-12f, magSq));
+                            totalDb += juce::jlimit(-48.0f, 0.0f, attenuationDb);
                             break;
                         }
-                        case 2: // High Cut (Low-Pass) — rolloff above f0
+                        case 2: // High Cut (Low-Pass)
                         {
                             float ratio = f0 / freq;
-                            float rolloff = 1.0f - 1.0f / (1.0f + ratio * ratio * q * q);
-                            float attenuationDb = 20.0f * std::log10(std::max(1e-6f, rolloff));
+                            float magSq = 1.0f;
                             
-                            int numStages = 1;
-                            if (band.slope == 24) numStages = 2;
-                            else if (band.slope == 48) numStages = 4;
+                            if (band.slope == 6)
+                            {
+                                magSq = 1.0f / (1.0f + ratio * ratio);
+                            }
+                            else if (band.slope == 12)
+                            {
+                                float denom = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                magSq = 1.0f / std::max(1e-12f, denom);
+                            }
+                            else if (band.slope == 18)
+                            {
+                                float magSq1 = 1.0f / (1.0f + ratio * ratio);
+                                float denom2 = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                float magSq2 = 1.0f / std::max(1e-12f, denom2);
+                                magSq = magSq1 * magSq2;
+                            }
+                            else // 24
+                            {
+                                float denom = ratio * ratio * ratio * ratio + (1.0f / (q * q) - 2.0f) * ratio * ratio + 1.0f;
+                                float singleMagSq = 1.0f / std::max(1e-12f, denom);
+                                magSq = singleMagSq * singleMagSq;
+                            }
                             
-                            totalDb += juce::jlimit(-48.0f, 0.0f, numStages * attenuationDb);
+                            float attenuationDb = 10.0f * std::log10(std::max(1e-12f, magSq));
+                            totalDb += juce::jlimit(-48.0f, 0.0f, attenuationDb);
                             break;
                         }
                         case 3: // Low Shelf
                         {
-                            // Step from 0 dB → gainDb, transition centred at f0
-                            float t = 1.0f / (1.0f + std::exp(2.5f * std::log2(freq / f0)));
+                            float steepness = 2.50f;
+                            if (band.slope == 6) steepness = 1.25f;
+                            else if (band.slope == 18) steepness = 3.75f;
+                            else if (band.slope == 24) steepness = 5.00f;
+                            
+                            float t = 1.0f / (1.0f + std::exp(steepness * std::log2(freq / f0)));
                             totalDb += gainDb * t;
                             break;
                         }
                         case 4: // High Shelf
                         {
-                            float t = 1.0f / (1.0f + std::exp(-2.5f * std::log2(freq / f0)));
+                            float steepness = 2.50f;
+                            if (band.slope == 6) steepness = 1.25f;
+                            else if (band.slope == 18) steepness = 3.75f;
+                            else if (band.slope == 24) steepness = 5.00f;
+                            
+                            float t = 1.0f / (1.0f + std::exp(-steepness * std::log2(freq / f0)));
                             totalDb += gainDb * t;
                             break;
                         }

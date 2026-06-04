@@ -4,7 +4,7 @@
 
 EQProcessorCore::EQProcessorCore()
 {
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < AUREQ::Params::numBands; ++i)
     {
         bands[static_cast<size_t>(i)].initialize(i);
     }
@@ -53,8 +53,8 @@ void EQProcessorCore::updateFromAPVTS(juce::AudioProcessorValueTreeState& apvts)
         themeMode = static_cast<int>(std::round(pThemeMode->load()));
     }
 
-    // 2. Atualizar Parâmetros por Banda (0 a 7)
-    for (int i = 0; i < 8; ++i)
+    // 2. Atualizar Parâmetros por Banda (0 a numBands-1)
+    for (int i = 0; i < AUREQ::Params::numBands; ++i)
     {
         if (auto* pEnabled = apvts.getRawParameterValue(AUREQ::Params::bandEnabledID(i)))
         {
@@ -86,13 +86,15 @@ void EQProcessorCore::updateFromAPVTS(juce::AudioProcessorValueTreeState& apvts)
             bands[static_cast<size_t>(i)].setBypassed(pBypass->load() > 0.5f);
         }
 
-        // Phase 5.19: Read slope from APVTS (choice index 0=12, 1=24, 2=48 dB/oct)
+        // Phase 21.0: Read slope from APVTS (choice index 0=6, 1=12, 2=18, 3=24 dB/oct)
         if (auto* pSlope = apvts.getRawParameterValue(AUREQ::Params::bandSlopeID(i)))
         {
             int slopeIndex = static_cast<int>(std::round(pSlope->load()));
             int slopeDbPerOct = 12;
-            if (slopeIndex == 1) slopeDbPerOct = 24;
-            else if (slopeIndex == 2) slopeDbPerOct = 48;
+            if (slopeIndex == 0) slopeDbPerOct = 6;
+            else if (slopeIndex == 1) slopeDbPerOct = 12;
+            else if (slopeIndex == 2) slopeDbPerOct = 18;
+            else if (slopeIndex == 3) slopeDbPerOct = 24;
             bands[static_cast<size_t>(i)].setSlope(slopeDbPerOct);
         }
 
@@ -198,7 +200,7 @@ void EQProcessorCore::processBlock(juce::AudioBuffer<float>& buffer)
 
 float EQProcessorCore::getBandDynamicGainDb(int bandIndex) const
 {
-    if (bandIndex >= 0 && bandIndex < 8)
+    if (bandIndex >= 0 && bandIndex < AUREQ::Params::numBands)
     {
         return bands[static_cast<size_t>(bandIndex)].getCurrentDynamicGainDb();
     }

@@ -111,9 +111,12 @@ namespace AUREQ::Params
             case 5: return 2500.0f;
             case 6: return 5000.0f;
             case 7: return 10000.0f;
+            case 8: return 30.0f;     // Sub/Low
+            case 9: return 400.0f;    // Low Mid
+            case 10: return 800.0f;   // Mid
+            case 11: return 15000.0f; // High Air
             default: break;
         }
-        jassertfalse;
         return 1000.0f;
     }
 }

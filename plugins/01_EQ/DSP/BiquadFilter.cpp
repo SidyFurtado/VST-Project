@@ -336,6 +336,188 @@ void BiquadFilter::setBandPass(float frequencyHz, float q)
     b0 = nb0; b1 = nb1; b2 = nb2; a1 = na1; a2 = na2;
 }
 
+// ---------------------------------------------------------------------------
+void BiquadFilter::setHighPassFirstOrder(float frequencyHz)
+{
+    double f0, omega0, sinO, cosO;
+    if (!sanitizeCommonInputs(currentSampleRate, frequencyHz, f0, omega0, sinO, cosO))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double tanHalf = std::tan(omega0 / 2.0);
+    if (std::abs(tanHalf) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double k = 1.0 / tanHalf;
+    const double a0 = k + 1.0;
+
+    if (std::abs(a0) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double raw_b0 = k / a0;
+    const double raw_b1 = -k / a0;
+    const double raw_b2 = 0.0;
+    const double raw_a1 = (1.0 - k) / a0;
+    const double raw_a2 = 0.0;
+
+    // Safety checks
+    if (std::isnan(raw_b0) || std::isinf(raw_b0) ||
+        std::isnan(raw_b1) || std::isinf(raw_b1) ||
+        std::isnan(raw_a1) || std::isinf(raw_a1))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    b0 = raw_b0; b1 = raw_b1; b2 = raw_b2; a1 = raw_a1; a2 = raw_a2;
+}
+
+// ---------------------------------------------------------------------------
+void BiquadFilter::setLowPassFirstOrder(float frequencyHz)
+{
+    double f0, omega0, sinO, cosO;
+    if (!sanitizeCommonInputs(currentSampleRate, frequencyHz, f0, omega0, sinO, cosO))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double tanHalf = std::tan(omega0 / 2.0);
+    if (std::abs(tanHalf) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double k = 1.0 / tanHalf;
+    const double a0 = k + 1.0;
+
+    if (std::abs(a0) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double raw_b0 = 1.0 / a0;
+    const double raw_b1 = 1.0 / a0;
+    const double raw_b2 = 0.0;
+    const double raw_a1 = (1.0 - k) / a0;
+    const double raw_a2 = 0.0;
+
+    // Safety checks
+    if (std::isnan(raw_b0) || std::isinf(raw_b0) ||
+        std::isnan(raw_b1) || std::isinf(raw_b1) ||
+        std::isnan(raw_a1) || std::isinf(raw_a1))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    b0 = raw_b0; b1 = raw_b1; b2 = raw_b2; a1 = raw_a1; a2 = raw_a2;
+}
+
+// ---------------------------------------------------------------------------
+void BiquadFilter::setLowShelfFirstOrder(float frequencyHz, float gainDb)
+{
+    double f0, omega0, sinO, cosO;
+    if (!sanitizeCommonInputs(currentSampleRate, frequencyHz, f0, omega0, sinO, cosO))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double dBclamped = std::max(-24.0, std::min(static_cast<double>(gainDb), 24.0));
+    const double A = std::pow(10.0, dBclamped / 40.0);
+
+    const double tanHalf = std::tan(omega0 / 2.0);
+    if (std::abs(tanHalf) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double k = 1.0 / tanHalf;
+    const double denom = A * k + 1.0;
+
+    if (std::abs(denom) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double raw_b0 = A * (k + A) / denom;
+    const double raw_b1 = A * (A - k) / denom;
+    const double raw_b2 = 0.0;
+    const double raw_a1 = (1.0 - A * k) / denom;
+    const double raw_a2 = 0.0;
+
+    // Safety checks
+    if (std::isnan(raw_b0) || std::isinf(raw_b0) ||
+        std::isnan(raw_b1) || std::isinf(raw_b1) ||
+        std::isnan(raw_a1) || std::isinf(raw_a1))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    b0 = raw_b0; b1 = raw_b1; b2 = raw_b2; a1 = raw_a1; a2 = raw_a2;
+}
+
+// ---------------------------------------------------------------------------
+void BiquadFilter::setHighShelfFirstOrder(float frequencyHz, float gainDb)
+{
+    double f0, omega0, sinO, cosO;
+    if (!sanitizeCommonInputs(currentSampleRate, frequencyHz, f0, omega0, sinO, cosO))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double dBclamped = std::max(-24.0, std::min(static_cast<double>(gainDb), 24.0));
+    const double A = std::pow(10.0, dBclamped / 40.0);
+
+    const double tanHalf = std::tan(omega0 / 2.0);
+    if (std::abs(tanHalf) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double k = 1.0 / tanHalf;
+    const double denom = k + A;
+
+    if (std::abs(denom) < 1e-12)
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    const double raw_b0 = A * (A * k + 1.0) / denom;
+    const double raw_b1 = A * (1.0 - A * k) / denom;
+    const double raw_b2 = 0.0;
+    const double raw_a1 = (A - k) / denom;
+    const double raw_a2 = 0.0;
+
+    // Safety checks
+    if (std::isnan(raw_b0) || std::isinf(raw_b0) ||
+        std::isnan(raw_b1) || std::isinf(raw_b1) ||
+        std::isnan(raw_a1) || std::isinf(raw_a1))
+    {
+        setBypassCoefficients();
+        return;
+    }
+
+    b0 = raw_b0; b1 = raw_b1; b2 = raw_b2; a1 = raw_a1; a2 = raw_a2;
+}
+
 float BiquadFilter::processSample(int channel, float inputSample) noexcept
 {
     const size_t chanIdx = static_cast<size_t>(channel);

@@ -465,13 +465,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout AureqAudioProcessor::createP
 
         // Phase 5.19 — Advanced parameters
 
-        // 7. Slope (12/24/48 dB/oct for Cut filters). Default: 12 dB/oct (index 0).
-        juce::StringArray slopeChoices { "12", "24", "48" };
+        // 7. Slope (6/12/18/24 dB/oct). Default: 12 dB/oct (index 1).
+        juce::StringArray slopeChoices { "6", "12", "18", "24" };
         params.push_back (std::make_unique<juce::AudioParameterChoice> (
             juce::ParameterID (AUREQ::Params::bandSlopeID (bandIndex), 1),
             AUREQ::Params::bandDisplayName (bandIndex) + " Slope",
             slopeChoices,
-            0)); // Default: 12 dB/oct
+            1)); // Default: 12 dB/oct
 
         // 8. Dynamic Enabled (DSP reserved — Phase 5.20+)
         params.push_back (std::make_unique<juce::AudioParameterBool> (

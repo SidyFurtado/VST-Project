@@ -11,7 +11,7 @@ void EQBand::prepare(double newSampleRate, int numChannels)
 {
     sampleRate = newSampleRate;
     filter.prepare(newSampleRate, numChannels);
-    for (auto& f : extraCutFilters)
+    for (auto& f : extraFilters)
         f.prepare(newSampleRate, numChannels);
 
     // Initialize smoothers: 30 ms for frequency, 20 ms for gain and Q
@@ -34,7 +34,7 @@ void EQBand::prepare(double newSampleRate, int numChannels)
 void EQBand::reset()
 {
     filter.reset();
-    for (auto& f : extraCutFilters)
+    for (auto& f : extraFilters)
         f.reset();
     freqSmoother.reset(frequency);
     gainSmoother.reset(gainDecibels);
@@ -114,7 +114,7 @@ void EQBand::setQ(float qVal)
 void EQBand::setSlope(int slopeDbPerOct)
 {
     int newSlope = slopeDbPerOct;
-    if (newSlope != 12 && newSlope != 24 && newSlope != 48)
+    if (newSlope != 6 && newSlope != 12 && newSlope != 18 && newSlope != 24)
         newSlope = 12;
 
     if (slope != newSlope)
@@ -226,6 +226,10 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
     // 3. Process through main filter stage and extra cascade filters depending on Channel Mode
     const int numChans = buffer.getNumChannels();
 
+    const bool isCascadeFilter = (type == FilterType::LowCut || type == FilterType::HighCut ||
+                                  type == FilterType::LowShelf || type == FilterType::HighShelf);
+    const int numActiveStages = (isCascadeFilter && (slope == 18 || slope == 24)) ? 2 : 1;
+
     if (numChans == 1)
     {
         // Mono buffer fallback: Stereo (0), Left (3), and Mid (1) process the single channel.
@@ -233,14 +237,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
         if (channelMode == 0 || channelMode == 1 || channelMode == 3)
         {
             filter.processBlock(buffer);
-            if (type == FilterType::LowCut || type == FilterType::HighCut)
-            {
-                int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                for (int i = 0; i < numStages - 1; ++i)
-                {
-                    extraCutFilters[static_cast<size_t>(i)].processBlock(buffer);
-                }
-            }
+            if (numActiveStages > 1)
+                extraFilters[0].processBlock(buffer);
         }
     }
     else if (numChans >= 2)
@@ -249,14 +247,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
         if (channelMode == 0) // Stereo
         {
             filter.processBlock(buffer);
-            if (type == FilterType::LowCut || type == FilterType::HighCut)
-            {
-                int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                for (int i = 0; i < numStages - 1; ++i)
-                {
-                    extraCutFilters[static_cast<size_t>(i)].processBlock(buffer);
-                }
-            }
+            if (numActiveStages > 1)
+                extraFilters[0].processBlock(buffer);
         }
         else if (channelMode == 3) // Left only
         {
@@ -265,14 +257,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
             {
                 float x = leftData[sample];
                 x = filter.processSample(0, x);
-                if (type == FilterType::LowCut || type == FilterType::HighCut)
-                {
-                    int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                    for (int i = 0; i < numStages - 1; ++i)
-                    {
-                        x = extraCutFilters[static_cast<size_t>(i)].processSample(0, x);
-                    }
-                }
+                if (numActiveStages > 1)
+                    x = extraFilters[0].processSample(0, x);
                 leftData[sample] = x;
             }
         }
@@ -283,14 +269,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
             {
                 float x = rightData[sample];
                 x = filter.processSample(1, x);
-                if (type == FilterType::LowCut || type == FilterType::HighCut)
-                {
-                    int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                    for (int i = 0; i < numStages - 1; ++i)
-                    {
-                        x = extraCutFilters[static_cast<size_t>(i)].processSample(1, x);
-                    }
-                }
+                if (numActiveStages > 1)
+                    x = extraFilters[0].processSample(1, x);
                 rightData[sample] = x;
             }
         }
@@ -307,14 +287,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
 
                 // Process Mid using channel 0 of the filter state (isolated and consistent)
                 m = filter.processSample(0, m);
-                if (type == FilterType::LowCut || type == FilterType::HighCut)
-                {
-                    int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                    for (int i = 0; i < numStages - 1; ++i)
-                    {
-                        m = extraCutFilters[static_cast<size_t>(i)].processSample(0, m);
-                    }
-                }
+                if (numActiveStages > 1)
+                    m = extraFilters[0].processSample(0, m);
 
                 // Reconstruct L/R
                 leftData[sample] = m + s;
@@ -334,14 +308,8 @@ void EQBand::processBlock(juce::AudioBuffer<float>& buffer) noexcept
 
                 // Process Side using channel 1 of the filter state (isolated and consistent)
                 s = filter.processSample(1, s);
-                if (type == FilterType::LowCut || type == FilterType::HighCut)
-                {
-                    int numStages = (slope == 24) ? 2 : ((slope == 48) ? 4 : 1);
-                    for (int i = 0; i < numStages - 1; ++i)
-                    {
-                        s = extraCutFilters[static_cast<size_t>(i)].processSample(1, s);
-                    }
-                }
+                if (numActiveStages > 1)
+                    s = extraFilters[0].processSample(1, s);
 
                 // Reconstruct L/R
                 leftData[sample] = m + s;
@@ -363,42 +331,108 @@ void EQBand::updateFilterCoefficients()
 
 void EQBand::updateFilterCoefficients(float f, float g, float qVal)
 {
-    int numStages = 1;
-    if (type == FilterType::LowCut || type == FilterType::HighCut)
-    {
-        if (slope == 24) numStages = 2;
-        else if (slope == 48) numStages = 4;
-    }
+    // By default, reset extra filter to bypass (0 dB peaking)
+    extraFilters[0].setPeaking(f, 0.0f, qVal);
 
     switch (type)
     {
         case FilterType::Bell:
             filter.setPeaking(f, g, qVal);
             break;
+
         case FilterType::LowCut:
-            filter.setHighPass(f, qVal);
-            for (int i = 0; i < numStages - 1; ++i)
-                extraCutFilters[static_cast<size_t>(i)].setHighPass(f, qVal);
+            if (slope == 6)
+            {
+                filter.setHighPassFirstOrder(f);
+            }
+            else if (slope == 12)
+            {
+                filter.setHighPass(f, qVal);
+            }
+            else if (slope == 18)
+            {
+                filter.setHighPass(f, qVal);
+                extraFilters[0].setHighPassFirstOrder(f);
+            }
+            else // 24
+            {
+                filter.setHighPass(f, qVal);
+                extraFilters[0].setHighPass(f, qVal);
+            }
             break;
+
         case FilterType::HighCut:
-            filter.setLowPass(f, qVal);
-            for (int i = 0; i < numStages - 1; ++i)
-                extraCutFilters[static_cast<size_t>(i)].setLowPass(f, qVal);
+            if (slope == 6)
+            {
+                filter.setLowPassFirstOrder(f);
+            }
+            else if (slope == 12)
+            {
+                filter.setLowPass(f, qVal);
+            }
+            else if (slope == 18)
+            {
+                filter.setLowPass(f, qVal);
+                extraFilters[0].setLowPassFirstOrder(f);
+            }
+            else // 24
+            {
+                filter.setLowPass(f, qVal);
+                extraFilters[0].setLowPass(f, qVal);
+            }
             break;
+
         case FilterType::LowShelf:
-            filter.setLowShelf(f, g);
+            if (slope == 6)
+            {
+                filter.setLowShelfFirstOrder(f, g);
+            }
+            else if (slope == 12)
+            {
+                filter.setLowShelf(f, g);
+            }
+            else if (slope == 18)
+            {
+                filter.setLowShelf(f, 2.0f * g / 3.0f);
+                extraFilters[0].setLowShelfFirstOrder(f, g / 3.0f);
+            }
+            else // 24
+            {
+                filter.setLowShelf(f, g / 2.0f);
+                extraFilters[0].setLowShelf(f, g / 2.0f);
+            }
             break;
+
         case FilterType::HighShelf:
-            filter.setHighShelf(f, g);
+            if (slope == 6)
+            {
+                filter.setHighShelfFirstOrder(f, g);
+            }
+            else if (slope == 12)
+            {
+                filter.setHighShelf(f, g);
+            }
+            else if (slope == 18)
+            {
+                filter.setHighShelf(f, 2.0f * g / 3.0f);
+                extraFilters[0].setHighShelfFirstOrder(f, g / 3.0f);
+            }
+            else // 24
+            {
+                filter.setHighShelf(f, g / 2.0f);
+                extraFilters[0].setHighShelf(f, g / 2.0f);
+            }
             break;
+
         case FilterType::Notch:
             filter.setNotch(f, qVal);
             break;
+
         case FilterType::BandPass:
             filter.setBandPass(f, qVal);
             break;
+
         default:
-            // Unknown type: identity filter (bypass)
             filter.setPeaking(f, 0.0f, qVal);
             break;
     }

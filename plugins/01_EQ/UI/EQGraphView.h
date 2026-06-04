@@ -6,6 +6,7 @@
 #include <array>
 #include <functional>
 #include <vector>
+#include "../Source/ParameterIDs.h"
 
 namespace AUREQ
 {
@@ -34,7 +35,7 @@ namespace AUREQ
         void setThemeColors(const ThemeColors& colors);
         void setLanguage (AureqLanguage language);
         
-        void setBands(const std::array<VisualEQBand, 8>& newBands);
+        void setBands(const std::array<VisualEQBand, AUREQ::Params::numBands>& newBands);
 
         /**
          * Receives the spectrum magnitude bins (in dBFS) from the AnalyzerProcessor.
@@ -82,7 +83,7 @@ namespace AUREQ
     private:
         ThemeColors themeColors;
         AureqLanguage currentLanguage { AureqLanguage::PortugueseBR };
-        std::array<VisualEQBand, 8> bands;
+        std::array<VisualEQBand, AUREQ::Params::numBands> bands;
         
         int activeBandDragIndex = -1;
         int selectedBandIndex = -1;
