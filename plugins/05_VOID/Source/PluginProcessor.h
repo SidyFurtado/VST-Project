@@ -61,21 +61,19 @@ private:
     // Fifo queues (must be prepared in prepareToPlay)
     LockFreeAudioFifo inputFifo;
     LockFreeAudioFifo outputFifo;
+    LockFreeAudioFifo dryFifo;
     
     InferenceThread inferenceThread;
-
-    // Latency compensation dry path delay
-    juce::dsp::DelayLine<float> delayLine;
-    juce::AudioBuffer<float> dryCopyBuffer;
 
     // Cached parameter pointers
     std::atomic<float>* vacuumIntensityParam = nullptr;
     std::atomic<float>* bypassParam = nullptr;
 
-    // Preallocated buffers for audio thread downmixing/upmixing.
+    // Preallocated buffers for audio thread downmixing/upmixing/dry-path.
     // Absolutely no dynamic allocation must happen in processBlock.
     juce::AudioBuffer<float> monoInputBuffer;
     juce::AudioBuffer<float> monoOutputBuffer;
+    juce::AudioBuffer<float> monoDryBuffer;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoidAudioProcessor)
 };

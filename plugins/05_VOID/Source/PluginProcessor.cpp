@@ -11,8 +11,7 @@ VoidAudioProcessor::VoidAudioProcessor()
                         .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                         .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "VOID_PARAMS", createParameterLayout()),
-      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent),
-      delayLine (4096)
+      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent)
 {
     vacuumIntensityParam = apvts.getRawParameterValue (VoidParams::vacuumIntensity());
     bypassParam = apvts.getRawParameterValue (VoidParams::bypass());
@@ -69,6 +68,7 @@ void VoidAudioProcessor::changeProgramName (int, const juce::String&)
 
 void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    juce::ignoreUnused (sampleRate);
     const int windowSize = InferenceCore::MODEL_FRAME_SIZE;
     
     // Allocate FIFOs with at least 4x the window size to buffer processing jitter
@@ -76,28 +76,27 @@ void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     
     inputFifo.prepare (1, fifoCapacity);
     outputFifo.prepare (1, fifoCapacity);
+    dryFifo.prepare (1, fifoCapacity);
     
     inputFifo.reset();
     outputFifo.reset();
+    dryFifo.reset();
+
+    // Pre-fill both dryFifo and outputFifo with exactly MODEL_FRAME_SIZE samples
+    // of silence. This aligns the latency in samples (PDC) and prevents Comb Filtering.
+    juce::AudioBuffer<float> silence (1, windowSize);
+    silence.clear();
+    dryFifo.write (silence, 0, windowSize);
+    outputFifo.write (silence, 0, windowSize);
     
     // Pre-allocate audio thread buffers
-    const int totalNumInputChannels = getTotalNumInputChannels();
     monoInputBuffer.setSize (1, samplesPerBlock);
     monoOutputBuffer.setSize (1, samplesPerBlock);
+    monoDryBuffer.setSize (1, samplesPerBlock);
+    
     monoInputBuffer.clear();
     monoOutputBuffer.clear();
-    
-    dryCopyBuffer.setSize (totalNumInputChannels, samplesPerBlock);
-    dryCopyBuffer.clear();
-    
-    // Prepare DelayLine
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32> (samplesPerBlock);
-    spec.numChannels = static_cast<juce::uint32> (totalNumInputChannels);
-    
-    delayLine.prepare (spec);
-    delayLine.setDelay (static_cast<float> (windowSize));
+    monoDryBuffer.clear();
     
     // Prepare and start the inference background thread
     inferenceThread.prepare();
@@ -111,6 +110,7 @@ void VoidAudioProcessor::releaseResources()
     inferenceThread.stopThread (2000);
     inputFifo.reset();
     outputFifo.reset();
+    dryFifo.reset();
 }
 
 bool VoidAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -144,30 +144,9 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int ch = totalNumInputChannels; ch < totalNumOutputChannels; ++ch)
         buffer.clear (ch, 0, numSamples);
 
-    // Make an exact copy of the input block (Dry signal)
-    for (int ch = 0; ch < totalNumInputChannels; ++ch)
-        dryCopyBuffer.copyFrom (ch, 0, buffer.getReadPointer (ch), numSamples);
-
-    // Process the Dry copy through the DelayLine to align with the latency of the Wet path
-    juce::dsp::AudioBlock<float> dryBlock (dryCopyBuffer);
-    juce::dsp::ProcessContextReplacing<float> delayContext (dryBlock);
-    delayLine.process (delayContext);
-
     // Read parameter values atomically
     const bool isBypassed = bypassParam->load() > 0.5f;
     const float intensity = vacuumIntensityParam->load() / 100.0f; // Crossfade: 0.0 (Dry) to 1.0 (Wet)
-
-    if (isBypassed)
-    {
-        // In bypass, copy the phase-aligned Dry signal to the output buffer
-        for (int ch = 0; ch < totalNumOutputChannels; ++ch)
-        {
-            auto* channelData = buffer.getWritePointer (ch);
-            auto* dryData     = dryCopyBuffer.getReadPointer (ch < totalNumInputChannels ? ch : 0);
-            juce::FloatVectorOperations::copy (channelData, dryData, numSamples);
-        }
-        return;
-    }
 
     // 1. Downmix original input channels to Mono (L+R / 2) into monoInputBuffer
     monoInputBuffer.clear();
@@ -188,16 +167,25 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // 2. Write mono samples to input FIFO (only if there is space to avoid overflow)
-    if (inputFifo.getFreeSpace() >= numSamples)
+    // 2. Write mono samples to both input FIFO and dry FIFO
+    // Symmetrical write ensures that dry samples are held in queue until wet samples are processed
+    if (inputFifo.getFreeSpace() >= numSamples && dryFifo.getFreeSpace() >= numSamples)
     {
         inputFifo.write (monoInputBuffer, 0, numSamples);
+        dryFifo.write (monoInputBuffer, 0, numSamples);
     }
     
     // 3. Wake up the inference thread
     signalEvent.signal();
 
-    // 4. Try reading processed samples from output FIFO
+    // 4. Read phase-aligned Dry signal from dryFifo
+    monoDryBuffer.clear();
+    if (dryFifo.getNumReady() >= numSamples)
+    {
+        dryFifo.read (monoDryBuffer, 0, numSamples);
+    }
+
+    // 5. Try reading processed samples from output FIFO
     monoOutputBuffer.clear();
     bool outputReady = false;
     
@@ -208,25 +196,33 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
     else
     {
-        // Safety: If output FIFO is empty, output silence for the wet portion (no blocking)
+        // Safety: If output FIFO is insufficient, output silence for Wet
         monoOutputBuffer.clear();
     }
 
-    // 5. Apply wet/dry mix, output gain, and duplicate mono output to the stereo buffers
-    auto* processedPtr = monoOutputBuffer.getReadPointer (0);
+    // 6. Apply Wet/Dry crossfade or Bypass, then duplicate mono output to the stereo buffers (Upmix)
+    auto* dryPtr = monoDryBuffer.getReadPointer (0);
+    auto* wetPtr = monoOutputBuffer.getReadPointer (0);
     
     for (int ch = 0; ch < totalNumOutputChannels; ++ch)
     {
-        auto* channelData    = buffer.getWritePointer (ch);
-        auto* alignedDryPtr  = dryCopyBuffer.getReadPointer (ch < totalNumInputChannels ? ch : 0);
+        auto* channelData = buffer.getWritePointer (ch);
         
         for (int i = 0; i < numSamples; ++i)
         {
-            float dry = alignedDryPtr[i];
-            float wet = outputReady ? processedPtr[i] : 0.0f;
+            float dryVal = dryPtr[i];
+            float wetVal = outputReady ? wetPtr[i] : 0.0f;
             
-            // Linear crossfade between aligned Dry and IA-processed Wet
-            channelData[i] = (wet * intensity) + (dry * (1.0f - intensity));
+            if (isBypassed)
+            {
+                // Symmetrical clean bypass using latency-aligned dry path
+                channelData[i] = dryVal;
+            }
+            else
+            {
+                // Symmetrical crossfade between Dry and Wet
+                channelData[i] = (wetVal * intensity) + (dryVal * (1.0f - intensity));
+            }
         }
     }
 }
@@ -263,7 +259,14 @@ bool VoidAudioProcessor::loadModel (const juce::String& modelPath)
         // Reset and reconfigure thread and queues
         inferenceThread.prepare();
         inputFifo.reset();
+        
+        dryFifo.reset();
         outputFifo.reset();
+        
+        juce::AudioBuffer<float> silence (1, InferenceCore::MODEL_FRAME_SIZE);
+        silence.clear();
+        dryFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
+        outputFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
         
         // Update latency reported to host (standard MODEL_FRAME_SIZE)
         setLatencySamples (InferenceCore::MODEL_FRAME_SIZE);
@@ -279,7 +282,14 @@ void VoidAudioProcessor::unloadModel()
     setLatencySamples (InferenceCore::MODEL_FRAME_SIZE);
     inferenceThread.prepare();
     inputFifo.reset();
+    
+    dryFifo.reset();
     outputFifo.reset();
+    
+    juce::AudioBuffer<float> silence (1, InferenceCore::MODEL_FRAME_SIZE);
+    silence.clear();
+    dryFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
+    outputFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
 }
 
 bool VoidAudioProcessor::isModelLoaded() const noexcept
