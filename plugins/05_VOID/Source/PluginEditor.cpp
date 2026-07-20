@@ -3,130 +3,164 @@
 #include "ParameterIDs.h"
 
 // ==============================================================================
+// BlackHoleLookAndFeel — Custom LookAndFeel for VOID
+// ==============================================================================
+
+VoidAudioProcessorEditor::BlackHoleLookAndFeel::BlackHoleLookAndFeel()
+{
+}
+
+void VoidAudioProcessorEditor::BlackHoleLookAndFeel::drawRotarySlider (
+    juce::Graphics& g, int x, int y, int width, int height,
+    float sliderPosProportional, float rotaryStartAngle,
+    float rotaryEndAngle, juce::Slider& slider)
+{
+    juce::ignoreUnused (slider);
+
+    auto outline = juce::Colour (0xFF1E1B4B); // Very dark indigo
+    auto fill    = juce::Colour (0xFF7C3AED); // Vibrant Violet
+    auto glow    = juce::Colour (0xFFA78BFA); // Soft Violet
+
+    auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (10.0f);
+    auto radius = std::min (bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto toX    = bounds.getCentreX();
+    auto toY    = bounds.getCentreY();
+
+    auto arcRadius = radius - 8.0f;
+
+    // Draw background track ring
+    juce::Path backgroundTrack;
+    backgroundTrack.addCentredArc (toX, toY, arcRadius, arcRadius, 0.0f, rotaryStartAngle, rotaryEndAngle, true);
+    g.setColour (outline);
+    g.strokePath (backgroundTrack, juce::PathStrokeType (5.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // Draw active fill arc
+    if (sliderPosProportional > 0.0f)
+    {
+        auto activeAngle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+        juce::Path valueTrack;
+        valueTrack.addCentredArc (toX, toY, arcRadius, arcRadius, 0.0f, rotaryStartAngle, activeAngle, true);
+
+        // Underglow effect
+        g.setColour (glow.withAlpha (0.4f * sliderPosProportional));
+        g.strokePath (valueTrack, juce::PathStrokeType (10.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+        // Solid fill
+        g.setColour (fill.interpolatedWith (juce::Colours::white, 0.15f * sliderPosProportional));
+        g.strokePath (valueTrack, juce::PathStrokeType (5.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    }
+
+    // Draw the Black Hole Core
+    auto holeRadius = arcRadius - 10.0f;
+    auto holeBounds = juce::Rectangle<float> (toX - holeRadius, toY - holeRadius, holeRadius * 2.0f, holeRadius * 2.0f);
+
+    // Inner shadow of the black hole
+    g.setColour (juce::Colours::black);
+    g.fillEllipse (holeBounds);
+
+    // Gravitational lensing (Accretion Disk glow ring)
+    auto lensingThickness = 1.0f + 3.0f * sliderPosProportional;
+    auto lensingGlow = fill.interpolatedWith (juce::Colours::white, 0.3f * sliderPosProportional);
+    
+    g.setColour (lensingGlow.withAlpha (0.2f + 0.7f * sliderPosProportional));
+    g.drawEllipse (holeBounds.expanded (lensingThickness * 0.5f), lensingThickness);
+}
+
+// ==============================================================================
 // VoidAudioProcessorEditor — Implementation
 // ==============================================================================
 
 VoidAudioProcessorEditor::VoidAudioProcessorEditor (VoidAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Configure mix slider
-    mixSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    mixSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
-    mixSlider.setRange (0.0, 1.0, 0.01);
-    addAndMakeVisible (mixSlider);
+    // Apply custom LookAndFeel to the massive knob
+    vacuumSlider.setLookAndFeel (&blackHoleLF);
+    vacuumSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    vacuumSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0); // No textbox
+    vacuumSlider.setRange (0.0, 100.0, 0.1);
+    addAndMakeVisible (vacuumSlider);
 
-    // Configure output gain slider
-    outputSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    outputSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
-    outputSlider.setRange (-12.0, 12.0, 0.1);
-    addAndMakeVisible (outputSlider);
-
-    // Configure labels
-    mixLabel.setFont (juce::Font (12.0f, juce::Font::bold));
-    mixLabel.setJustificationType (juce::Justification::centred);
-    mixLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF9CA3AF)); // Gray
-    addAndMakeVisible (mixLabel);
-
-    outputLabel.setFont (juce::Font (12.0f, juce::Font::bold));
-    outputLabel.setJustificationType (juce::Justification::centred);
-    outputLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF9CA3AF)); // Gray
-    addAndMakeVisible (outputLabel);
+    // Vacuum Label
+    vacuumLabel.setFont (juce::FontOptions (13.0f).withStyle ("Regular"));
+    vacuumLabel.setJustificationType (juce::Justification::centred);
+    vacuumLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF9CA3AF)); // Muted text
+    addAndMakeVisible (vacuumLabel);
 
     // Model path display
-    modelPathLabel.setFont (juce::Font (11.0f, juce::Font::plain));
+    modelPathLabel.setFont (juce::FontOptions (10.0f).withStyle ("Light"));
     modelPathLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (modelPathLabel);
 
-    // Bypass toggle
+    // Bypass Toggle
+    bypassToggle.setButtonText ("BYPASS");
+    bypassToggle.setColour (juce::ToggleButton::tickColourId, juce::Colour (0xFF7C3AED));
+    bypassToggle.setColour (juce::ToggleButton::textColourId, juce::Colours::white);
     addAndMakeVisible (bypassToggle);
 
-    // Buttons
+    // Load/Unload buttons
     loadButton.addListener (this);
     unloadButton.addListener (this);
     addAndMakeVisible (loadButton);
     addAndMakeVisible (unloadButton);
 
-    // Attachments
-    mixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-        audioProcessor.apvts, VoidParams::mix(), mixSlider);
-    outputAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-        audioProcessor.apvts, VoidParams::outputGain(), outputSlider);
+    auto darkBg = juce::Colour (0xFF1E1B4B); // Deep indigo
+    loadButton.setColour (juce::TextButton::buttonColourId, darkBg);
+    loadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+    unloadButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF111827)); // Charcoal
+    unloadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
+
+    // APVTS Attachments
+    vacuumAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
+        audioProcessor.apvts, VoidParams::vacuumIntensity(), vacuumSlider);
     bypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
         audioProcessor.apvts, VoidParams::bypass(), bypassToggle);
 
-    // Update path label
     updateModelPathDisplay();
 
-    // Style buttons/sliders
-    auto emerald = juce::Colour (0xFF10B981);
-    auto darkBg  = juce::Colour (0xFF1E293B);
-    
-    // Sliders coloring
-    mixSlider.setColour (juce::Slider::rotarySliderFillColourId, emerald);
-    mixSlider.setColour (juce::Slider::thumbColourId, juce::Colours::white);
-    outputSlider.setColour (juce::Slider::rotarySliderFillColourId, emerald);
-    outputSlider.setColour (juce::Slider::thumbColourId, juce::Colours::white);
-    
-    // Toggle coloring
-    bypassToggle.setColour (juce::ToggleButton::tickColourId, emerald);
-
-    // Buttons coloring
-    loadButton.setColour (juce::TextButton::buttonColourId, darkBg);
-    loadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
-    unloadButton.setColour (juce::TextButton::buttonColourId, darkBg.darker());
-    unloadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
-
-    setSize (500, 300);
+    setSize (400, 450);
 }
 
 VoidAudioProcessorEditor::~VoidAudioProcessorEditor()
 {
+    vacuumSlider.setLookAndFeel (nullptr);
     loadButton.removeListener (this);
     unloadButton.removeListener (this);
 }
 
 void VoidAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Draw deep premium gradient background
-    auto fillGrad = juce::ColourGradient (
-        juce::Colour (0xFF0F172A), 0.0f, 0.0f,
-        juce::Colour (0xFF020617), 0.0f, 300.0f, false);
-    g.setGradientFill (fillGrad);
-    g.fillAll();
+    // Draw solid black background
+    g.fillAll (juce::Colours::black);
 
-    // Draw glassmorphic display box in the upper section
-    g.setColour (juce::Colour (0x10FFFFFF)); // Semi-transparent white
-    g.fillRoundedRectangle (20.0f, 60.0f, 460.0f, 80.0f, 8.0f);
-    
-    g.setColour (juce::Colour (0x20FFFFFF));
-    g.drawRoundedRectangle (20.0f, 60.0f, 460.0f, 80.0f, 8.0f, 1.0f);
-
-    // Title / Brand
+    // Draw Title (VOID) with spread tracking spacing
     g.setColour (juce::Colours::white);
-    g.setFont (juce::Font (18.0f, juce::Font::bold));
-    g.drawText ("VOID", 20, 20, 200, 30, juce::Justification::left);
-    
-    g.setColour (juce::Colour (0xFF10B981)); // Emerald
-    g.setFont (juce::Font (10.0f, juce::Font::bold));
-    g.drawText ("ASTRA AUDIO SUITE // REAL-TIME AI", 220, 20, 260, 30, juce::Justification::right);
+    g.setFont (juce::FontOptions (24.0f).withStyle ("Bold"));
+    g.drawText ("V  O  I  D", 0, 30, getWidth(), 40, juce::Justification::centred);
+
+    // Under-title line indicator
+    g.setColour (juce::Colour (0x1CFFFFFF));
+    g.drawHorizontalLine (70, 40.0f, getWidth() - 40.0f);
+
+    // ACCRETION DISK visual ring in background of the knob
+    auto centerKnob = vacuumSlider.getBounds().toFloat();
+    auto radius = std::min (centerKnob.getWidth(), centerKnob.getHeight()) / 2.0f - 10.0f;
+    g.setColour (juce::Colour (0x0A7C3AED)); // Extremely faint violet glow
+    g.fillEllipse (centerKnob.getCentreX() - radius, centerKnob.getCentreY() - radius, radius * 2.0f, radius * 2.0f);
 }
 
 void VoidAudioProcessorEditor::resized()
 {
-    // Layout display box contents
-    loadButton.setBounds (35, 80, 110, 40);
-    unloadButton.setBounds (155, 80, 70, 40);
-    modelPathLabel.setBounds (235, 75, 230, 50);
+    // Model Path Display
+    modelPathLabel.setBounds (40, 80, 320, 30);
 
-    // Layout bottom controls
-    bypassToggle.setBounds (40, 200, 80, 30);
-    
-    // Sliders
-    mixSlider.setBounds (170, 160, 100, 100);
-    mixLabel.setBounds (170, 265, 100, 20);
+    // Center Massive Knob
+    vacuumSlider.setBounds (100, 130, 200, 200);
+    vacuumLabel.setBounds (100, 340, 200, 20);
 
-    outputSlider.setBounds (310, 160, 100, 100);
-    outputLabel.setBounds (310, 265, 100, 20);
+    // Footer controls
+    loadButton.setBounds (40, 390, 100, 30);
+    unloadButton.setBounds (150, 390, 70, 30);
+    bypassToggle.setBounds (280, 390, 80, 30);
 }
 
 void VoidAudioProcessorEditor::buttonClicked (juce::Button* button)
@@ -162,12 +196,12 @@ void VoidAudioProcessorEditor::updateModelPathDisplay()
     if (audioProcessor.isModelLoaded())
     {
         auto file = juce::File (audioProcessor.getLoadedModelPath());
-        modelPathLabel.setText ("Model: " + file.getFileName(), juce::dontSendNotification);
-        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF34D399)); // Emerald Green
+        modelPathLabel.setText ("VACUUM LAYER ACTIVE: " + file.getFileName().toUpperCase(), juce::dontSendNotification);
+        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFFA78BFA)); // Soft Violet
     }
     else
     {
-        modelPathLabel.setText ("No Model Loaded\n(Bypassed)", juce::dontSendNotification);
-        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF9CA3AF)); // Gray
+        modelPathLabel.setText ("VACUUM LAYER IDLE (CLEAN BYPASS)", juce::dontSendNotification);
+        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF6B7280)); // Medium Gray
     }
 }

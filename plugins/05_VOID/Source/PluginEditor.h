@@ -25,21 +25,30 @@ public:
 private:
     VoidAudioProcessor& audioProcessor;
 
+    // Custom LookAndFeel for the Black Hole Knob
+    class BlackHoleLookAndFeel : public juce::LookAndFeel_V4
+    {
+    public:
+        BlackHoleLookAndFeel();
+        void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
+                               float sliderPosProportional, float rotaryStartAngle,
+                               float rotaryEndAngle, juce::Slider& slider) override;
+    };
+
+    BlackHoleLookAndFeel blackHoleLF;
+
     // UI Controls
+    juce::Slider vacuumSlider;
+    juce::ToggleButton bypassToggle { "BYPASS" };
+    
     juce::TextButton loadButton { "LOAD MODEL" };
     juce::TextButton unloadButton { "UNLOAD" };
     
-    juce::Slider mixSlider;
-    juce::Slider outputSlider;
-    juce::ToggleButton bypassToggle { "BYPASS" };
-
-    juce::Label mixLabel { "mixLabel", "MIX" };
-    juce::Label outputLabel { "outputLabel", "OUTPUT" };
+    juce::Label vacuumLabel { "vacuumLabel", "VACUUM INTENSITY" };
     juce::Label modelPathLabel;
 
     // APVTS Attachments
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vacuumAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bypassAttachment;
 
     // Helper to update the loaded model path label

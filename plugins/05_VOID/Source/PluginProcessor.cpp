@@ -11,8 +11,11 @@ VoidAudioProcessor::VoidAudioProcessor()
                         .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                         .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "VOID_PARAMS", createParameterLayout()),
-      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent)
+      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent),
+      delayLine (4096)
 {
+    vacuumIntensityParam = apvts.getRawParameterValue (VoidParams::vacuumIntensity());
+    bypassParam = apvts.getRawParameterValue (VoidParams::bypass());
 }
 
 VoidAudioProcessor::~VoidAudioProcessor()
@@ -66,8 +69,6 @@ void VoidAudioProcessor::changeProgramName (int, const juce::String&)
 
 void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    juce::ignoreUnused (sampleRate);
-
     const int windowSize = InferenceCore::MODEL_FRAME_SIZE;
     
     // Allocate FIFOs with at least 4x the window size to buffer processing jitter
@@ -80,10 +81,23 @@ void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     outputFifo.reset();
     
     // Pre-allocate audio thread buffers
+    const int totalNumInputChannels = getTotalNumInputChannels();
     monoInputBuffer.setSize (1, samplesPerBlock);
     monoOutputBuffer.setSize (1, samplesPerBlock);
     monoInputBuffer.clear();
     monoOutputBuffer.clear();
+    
+    dryCopyBuffer.setSize (totalNumInputChannels, samplesPerBlock);
+    dryCopyBuffer.clear();
+    
+    // Prepare DelayLine
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32> (samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32> (totalNumInputChannels);
+    
+    delayLine.prepare (spec);
+    delayLine.setDelay (static_cast<float> (windowSize));
     
     // Prepare and start the inference background thread
     inferenceThread.prepare();
@@ -130,19 +144,32 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int ch = totalNumInputChannels; ch < totalNumOutputChannels; ++ch)
         buffer.clear (ch, 0, numSamples);
 
+    // Make an exact copy of the input block (Dry signal)
+    for (int ch = 0; ch < totalNumInputChannels; ++ch)
+        dryCopyBuffer.copyFrom (ch, 0, buffer.getReadPointer (ch), numSamples);
+
+    // Process the Dry copy through the DelayLine to align with the latency of the Wet path
+    juce::dsp::AudioBlock<float> dryBlock (dryCopyBuffer);
+    juce::dsp::ProcessContextReplacing<float> delayContext (dryBlock);
+    delayLine.process (delayContext);
+
     // Read parameter values atomically
-    const bool isBypassed = apvts.getRawParameterValue (VoidParams::bypass())->load() > 0.5f;
-    const float mixAmount = apvts.getRawParameterValue (VoidParams::mix())->load();
-    const float outputGainDb = apvts.getRawParameterValue (VoidParams::outputGain())->load();
-    const float outputGain = juce::Decibels::decibelsToGain (outputGainDb);
+    const bool isBypassed = bypassParam->load() > 0.5f;
+    const float intensity = vacuumIntensityParam->load() / 100.0f; // Crossfade: 0.0 (Dry) to 1.0 (Wet)
 
     if (isBypassed)
     {
-        // In bypass, keep input signal unmodified.
+        // In bypass, copy the phase-aligned Dry signal to the output buffer
+        for (int ch = 0; ch < totalNumOutputChannels; ++ch)
+        {
+            auto* channelData = buffer.getWritePointer (ch);
+            auto* dryData     = dryCopyBuffer.getReadPointer (ch < totalNumInputChannels ? ch : 0);
+            juce::FloatVectorOperations::copy (channelData, dryData, numSamples);
+        }
         return;
     }
 
-    // 1. Downmix input channels to Mono (L+R / 2) into monoInputBuffer
+    // 1. Downmix original input channels to Mono (L+R / 2) into monoInputBuffer
     monoInputBuffer.clear();
     if (totalNumInputChannels > 0)
     {
@@ -190,16 +217,16 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     
     for (int ch = 0; ch < totalNumOutputChannels; ++ch)
     {
-        auto* channelData = buffer.getWritePointer (ch);
-        auto* originalReadPtr = buffer.getReadPointer (ch < totalNumInputChannels ? ch : 0);
+        auto* channelData    = buffer.getWritePointer (ch);
+        auto* alignedDryPtr  = dryCopyBuffer.getReadPointer (ch < totalNumInputChannels ? ch : 0);
         
         for (int i = 0; i < numSamples; ++i)
         {
-            float dry = originalReadPtr[i];
+            float dry = alignedDryPtr[i];
             float wet = outputReady ? processedPtr[i] : 0.0f;
             
-            float mixed = (wet * mixAmount) + (dry * (1.0f - mixAmount));
-            channelData[i] = mixed * outputGain;
+            // Linear crossfade between aligned Dry and IA-processed Wet
+            channelData[i] = (wet * intensity) + (dry * (1.0f - intensity));
         }
     }
 }
@@ -238,7 +265,7 @@ bool VoidAudioProcessor::loadModel (const juce::String& modelPath)
         inputFifo.reset();
         outputFifo.reset();
         
-        // Update latency reported to host
+        // Update latency reported to host (standard MODEL_FRAME_SIZE)
         setLatencySamples (InferenceCore::MODEL_FRAME_SIZE);
     }
     
@@ -279,17 +306,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout VoidAudioProcessor::createPa
         false));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat> (
-        juce::ParameterID (VoidParams::mix(), 1),
-        "Mix",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        1.0f));
-
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
-        juce::ParameterID (VoidParams::outputGain(), 1),
-        "Output Gain",
-        juce::NormalisableRange<float> (-12.0f, 12.0f, 0.1f),
-        0.0f,
-        "dB"));
+        juce::ParameterID (VoidParams::vacuumIntensity(), 1),
+        "Vacuum",
+        juce::NormalisableRange<float> (0.0f, 100.0f, 0.1f),
+        100.0f));
 
     return { params.begin(), params.end() };
 }

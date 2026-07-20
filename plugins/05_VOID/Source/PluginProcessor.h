@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 #include "InferenceCore.h"
 #include "InferenceThread.h"
 
@@ -62,6 +63,14 @@ private:
     LockFreeAudioFifo outputFifo;
     
     InferenceThread inferenceThread;
+
+    // Latency compensation dry path delay
+    juce::dsp::DelayLine<float> delayLine;
+    juce::AudioBuffer<float> dryCopyBuffer;
+
+    // Cached parameter pointers
+    std::atomic<float>* vacuumIntensityParam = nullptr;
+    std::atomic<float>* bypassParam = nullptr;
 
     // Preallocated buffers for audio thread downmixing/upmixing.
     // Absolutely no dynamic allocation must happen in processBlock.

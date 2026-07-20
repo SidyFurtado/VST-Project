@@ -4,7 +4,6 @@
 
 namespace VoidParams
 {
-    inline constexpr const char* bypass()     { return "bypass"; }
-    inline constexpr const char* mix()        { return "mix"; }
-    inline constexpr const char* outputGain() { return "outputGain"; }
+    inline constexpr const char* bypass()          { return "bypass"; }
+    inline constexpr const char* vacuumIntensity() { return "vacuum_intensity"; }
 }
