@@ -116,12 +116,14 @@ VoidAudioProcessorEditor::VoidAudioProcessorEditor (VoidAudioProcessor& p)
         audioProcessor.apvts, VoidParams::bypass(), bypassToggle);
 
     updateModelPathDisplay();
+    startTimerHz (10); // Start timer to poll parameters & status at 10Hz (100ms)
 
     setSize (400, 450);
 }
 
 VoidAudioProcessorEditor::~VoidAudioProcessorEditor()
 {
+    stopTimer();
     vacuumSlider.setLookAndFeel (nullptr);
     loadButton.removeListener (this);
     unloadButton.removeListener (this);
@@ -191,17 +193,32 @@ void VoidAudioProcessorEditor::buttonClicked (juce::Button* button)
     }
 }
 
+void VoidAudioProcessorEditor::timerCallback()
+{
+    updateModelPathDisplay();
+}
+
 void VoidAudioProcessorEditor::updateModelPathDisplay()
 {
-    if (audioProcessor.isModelLoaded())
+    const bool isLoaded = audioProcessor.isModelLoaded();
+    const bool isBypassed = audioProcessor.apvts.getRawParameterValue (VoidParams::bypass())->load() > 0.5f;
+
+    if (isLoaded)
     {
-        auto file = juce::File (audioProcessor.getLoadedModelPath());
-        modelPathLabel.setText ("VACUUM LAYER ACTIVE: " + file.getFileName().toUpperCase(), juce::dontSendNotification);
-        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFFA78BFA)); // Soft Violet
+        if (isBypassed)
+        {
+            modelPathLabel.setText ("VACUUM LAYER IDLE (BYPASS)", juce::dontSendNotification);
+            modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF6B7280)); // Muted Gray
+        }
+        else
+        {
+            modelPathLabel.setText ("VACUUM ACTIVE (MODEL LOADED)", juce::dontSendNotification);
+            modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFFA78BFA)); // Glowing Violet
+        }
     }
     else
     {
-        modelPathLabel.setText ("VACUUM LAYER IDLE (CLEAN BYPASS)", juce::dontSendNotification);
-        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF6B7280)); // Medium Gray
+        modelPathLabel.setText ("VACUUM LAYER IDLE (BYPASS)", juce::dontSendNotification);
+        modelPathLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF6B7280)); // Muted Gray
     }
 }

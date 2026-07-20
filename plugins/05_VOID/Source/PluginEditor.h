@@ -9,7 +9,8 @@
 // ==============================================================================
 
 class VoidAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                 private juce::Button::Listener
+                                 private juce::Button::Listener,
+                                 private juce::Timer
 {
 public:
     VoidAudioProcessorEditor (VoidAudioProcessor&);
@@ -21,6 +22,9 @@ public:
 
     // ---- Button Listener --------------------------------------------------------
     void buttonClicked (juce::Button* button) override;
+
+    // ---- Timer callback ---------------------------------------------------------
+    void timerCallback() override;
 
 private:
     VoidAudioProcessor& audioProcessor;
