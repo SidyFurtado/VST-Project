@@ -4,6 +4,7 @@
 #include <juce_dsp/juce_dsp.h>
 #include "InferenceCore.h"
 #include "InferenceThread.h"
+#include <array>
 
 // ==============================================================================
 // VoidAudioProcessor — ASTRA Audio Suite / VOID
@@ -74,6 +75,34 @@ private:
     juce::AudioBuffer<float> monoInputBuffer;
     juce::AudioBuffer<float> monoOutputBuffer;
     juce::AudioBuffer<float> monoDryBuffer;
+
+    // ---- FFT / STFT Overlap-Add -------------------------------------------------
+    static constexpr int FFT_ORDER = 10;
+    static constexpr int FFT_SIZE = 1024;
+    static constexpr int HOP_SIZE = 256;
+
+    juce::dsp::FFT forwardFFT;
+    juce::dsp::FFT inverseFFT;
+    juce::dsp::WindowingFunction<float> window;
+
+    // OLA Work buffers
+    std::array<float, FFT_SIZE> dryTimeBuffer;
+    std::array<float, FFT_SIZE> wetTimeBuffer;
+    std::array<float, FFT_SIZE * 2> fftDryComplex;
+    std::array<float, FFT_SIZE * 2> fftWetComplex;
+    std::array<float, FFT_SIZE> olaOutputBuffer;
+
+    // FFT analysis & synthesis working frames (to avoid dynamic allocations)
+    std::array<float, FFT_SIZE> fftDryInput;
+    std::array<float, FFT_SIZE> fftWetInput;
+    std::array<float, FFT_SIZE> ifftOutput;
+
+    // Hop read buffers
+    juce::AudioBuffer<float> stftHopDryBuffer;
+    juce::AudioBuffer<float> stftHopWetBuffer;
+
+    // Output OLA FIFO
+    LockFreeAudioFifo stftOutputFifo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoidAudioProcessor)
 };

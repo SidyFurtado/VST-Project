@@ -11,7 +11,10 @@ VoidAudioProcessor::VoidAudioProcessor()
                         .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                         .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "VOID_PARAMS", createParameterLayout()),
-      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent)
+      inferenceThread (inferenceCore, inputFifo, outputFifo, signalEvent),
+      forwardFFT (FFT_ORDER),
+      inverseFFT (FFT_ORDER),
+      window (FFT_SIZE, juce::dsp::WindowingFunction<float>::hann, false)
 {
     vacuumIntensityParam = apvts.getRawParameterValue (VoidParams::vacuumIntensity());
     bypassParam = apvts.getRawParameterValue (VoidParams::bypass());
@@ -71,23 +74,31 @@ void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     juce::ignoreUnused (sampleRate);
     const int windowSize = InferenceCore::MODEL_FRAME_SIZE;
     
-    // Allocate FIFOs with at least 4x the window size to buffer processing jitter
-    const int fifoCapacity = std::max (4096, windowSize * 4);
+    // Allocate FIFOs with at least 8x the capacity to buffer processing jitter
+    const int fifoCapacity = std::max (4096, windowSize * 8);
     
     inputFifo.prepare (1, fifoCapacity);
     outputFifo.prepare (1, fifoCapacity);
     dryFifo.prepare (1, fifoCapacity);
+    stftOutputFifo.prepare (1, fifoCapacity);
     
     inputFifo.reset();
     outputFifo.reset();
     dryFifo.reset();
+    stftOutputFifo.reset();
 
     // Pre-fill both dryFifo and outputFifo with exactly MODEL_FRAME_SIZE samples
-    // of silence. This aligns the latency in samples (PDC) and prevents Comb Filtering.
+    // of silence. This aligns the latency in samples (PDC) and prevents phase cancellation.
     juce::AudioBuffer<float> silence (1, windowSize);
     silence.clear();
     dryFifo.write (silence, 0, windowSize);
     outputFifo.write (silence, 0, windowSize);
+    
+    // Pre-fill stftOutputFifo with the combined latency: 480 (ONNX) + 768 (OLA) = 1248 samples.
+    const int totalLatency = windowSize + (FFT_SIZE - HOP_SIZE);
+    juce::AudioBuffer<float> stftSilence (1, totalLatency);
+    stftSilence.clear();
+    stftOutputFifo.write (stftSilence, 0, totalLatency);
     
     // Pre-allocate audio thread buffers
     monoInputBuffer.setSize (1, samplesPerBlock);
@@ -97,12 +108,28 @@ void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     monoInputBuffer.clear();
     monoOutputBuffer.clear();
     monoDryBuffer.clear();
+
+    stftHopDryBuffer.setSize (1, HOP_SIZE);
+    stftHopWetBuffer.setSize (1, HOP_SIZE);
+    stftHopDryBuffer.clear();
+    stftHopWetBuffer.clear();
+
+    // Reset FFT/OLA working arrays
+    dryTimeBuffer.fill (0.0f);
+    wetTimeBuffer.fill (0.0f);
+    fftDryComplex.fill (0.0f);
+    fftWetComplex.fill (0.0f);
+    olaOutputBuffer.fill (0.0f);
+
+    fftDryInput.fill (0.0f);
+    fftWetInput.fill (0.0f);
+    ifftOutput.fill (0.0f);
     
     // Prepare and start the inference background thread
     inferenceThread.prepare();
     
-    // Report the IA window size as the plugin's latency to the DAW/Host
-    setLatencySamples (windowSize);
+    // Report the total latency to the DAW/Host
+    setLatencySamples (totalLatency);
 }
 
 void VoidAudioProcessor::releaseResources()
@@ -111,6 +138,7 @@ void VoidAudioProcessor::releaseResources()
     inputFifo.reset();
     outputFifo.reset();
     dryFifo.reset();
+    stftOutputFifo.reset();
 }
 
 bool VoidAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -146,7 +174,8 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     // Read parameter values atomically
     const bool isBypassed = bypassParam->load() > 0.5f;
-    const float intensity = vacuumIntensityParam->load() / 100.0f; // Crossfade: 0.0 (Dry) to 1.0 (Wet)
+    const float alpha = vacuumIntensityParam->load() / 100.0f; // Crossfade: 0.0 (Dry) to 1.0 (Wet)
+    const float activeAlpha = isBypassed ? 0.0f : alpha;
 
     // 1. Downmix original input channels to Mono (L+R / 2) into monoInputBuffer
     monoInputBuffer.clear();
@@ -168,7 +197,6 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     // 2. Write mono samples to both input FIFO and dry FIFO
-    // Symmetrical write ensures that dry samples are held in queue until wet samples are processed
     if (inputFifo.getFreeSpace() >= numSamples && dryFifo.getFreeSpace() >= numSamples)
     {
         inputFifo.write (monoInputBuffer, 0, numSamples);
@@ -178,51 +206,113 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // 3. Wake up the inference thread
     signalEvent.signal();
 
-    // 4. Read phase-aligned Dry signal from dryFifo
-    monoDryBuffer.clear();
-    if (dryFifo.getNumReady() >= numSamples)
+    // 4. Run STFT Overlap-Add loop whenever we have at least HOP_SIZE (256) samples in both channels
+    while (dryFifo.getNumReady() >= HOP_SIZE)
     {
-        dryFifo.read (monoDryBuffer, 0, numSamples);
+        const bool wetAvailable = (outputFifo.getNumReady() >= HOP_SIZE);
+        
+        stftHopDryBuffer.clear();
+        dryFifo.read (stftHopDryBuffer, 0, HOP_SIZE);
+        
+        stftHopWetBuffer.clear();
+        if (wetAvailable)
+        {
+            outputFifo.read (stftHopWetBuffer, 0, HOP_SIZE);
+        }
+
+        // --- STFT OLA 75% Engine ---
+        // a) Shift historical buffers left by HOP_SIZE
+        std::copy (dryTimeBuffer.begin() + HOP_SIZE, dryTimeBuffer.end(), dryTimeBuffer.begin());
+        std::copy (wetTimeBuffer.begin() + HOP_SIZE, wetTimeBuffer.end(), wetTimeBuffer.begin());
+        
+        // b) Append new samples to the end of the history
+        auto* newDryPtr = stftHopDryBuffer.getReadPointer (0);
+        auto* newWetPtr = stftHopWetBuffer.getReadPointer (0);
+        std::copy (newDryPtr, newDryPtr + HOP_SIZE, dryTimeBuffer.begin() + (FFT_SIZE - HOP_SIZE));
+        std::copy (newWetPtr, newWetPtr + HOP_SIZE, wetTimeBuffer.begin() + (FFT_SIZE - HOP_SIZE));
+
+        // c) Apply Hann windowing to copies of the time domain signals
+        std::copy (dryTimeBuffer.begin(), dryTimeBuffer.end(), fftDryInput.begin());
+        std::copy (wetTimeBuffer.begin(), wetTimeBuffer.end(), fftWetInput.begin());
+        
+        window.multiplyWithWindowingTable (fftDryInput.data(), FFT_SIZE);
+        window.multiplyWithWindowingTable (fftWetInput.data(), FFT_SIZE);
+
+        // d) Zero-pad complex structures for real-to-complex FFT
+        std::fill (fftDryComplex.begin(), fftDryComplex.end(), 0.0f);
+        std::fill (fftWetComplex.begin(), fftWetComplex.end(), 0.0f);
+        std::copy (fftDryInput.begin(), fftDryInput.end(), fftDryComplex.begin());
+        std::copy (fftWetInput.begin(), fftWetInput.end(), fftWetComplex.begin());
+
+        // e) Forward FFT
+        forwardFFT.performRealOnlyForwardTransform (fftDryComplex.data());
+        forwardFFT.performRealOnlyForwardTransform (fftWetComplex.data());
+
+        // f) Magnitude Masking (Phase Preservation)
+        // Itere over all FFT bins: real part is at index 2*k, imaginary is at 2*k+1
+        for (int k = 0; k < FFT_SIZE; ++k)
+        {
+            float rD = fftDryComplex[2 * k];
+            float iD = fftDryComplex[2 * k + 1];
+            
+            float rW = fftWetComplex[2 * k];
+            float iW = fftWetComplex[2 * k + 1];
+            
+            float magD = std::sqrt (rD * rD + iD * iD);
+            float magW = std::sqrt (rW * rW + iW * iW);
+            
+            // Mask ratio
+            float mask = juce::jlimit (0.0f, 1.0f, magW / (magD + 1e-6f));
+            float finalMask = (1.0f - activeAlpha) + activeAlpha * mask;
+            
+            // Modify magnitude, leaving Phase completely intact
+            fftDryComplex[2 * k]     = rD * finalMask;
+            fftDryComplex[2 * k + 1] = iD * finalMask;
+        }
+
+        // g) Inverse FFT
+        inverseFFT.performRealOnlyInverseTransform (fftDryComplex.data());
+        std::copy (fftDryComplex.begin(), fftDryComplex.begin() + FFT_SIZE, ifftOutput.begin());
+
+        // h) Synthesis Windowing (to satisfy COLA reconstruction)
+        window.multiplyWithWindowingTable (ifftOutput.data(), FFT_SIZE);
+
+        // i) Accumulate (Overlap-Add) into olaOutputBuffer
+        for (int i = 0; i < FFT_SIZE; ++i)
+        {
+            olaOutputBuffer[i] += ifftOutput[i];
+        }
+
+        // j) Write HOP_SIZE samples to stftOutputFifo (wrapping as stack-allocated AudioBuffer)
+        auto* olaPtr = olaOutputBuffer.data();
+        juce::AudioBuffer<float> tempStftBuffer (&olaPtr, 1, HOP_SIZE);
+        stftOutputFifo.write (tempStftBuffer, 0, HOP_SIZE);
+
+        // k) Shift olaOutputBuffer left by HOP_SIZE
+        std::copy (olaOutputBuffer.begin() + HOP_SIZE, olaOutputBuffer.end(), olaOutputBuffer.begin());
+        std::fill (olaOutputBuffer.begin() + (FFT_SIZE - HOP_SIZE), olaOutputBuffer.end(), 0.0f);
     }
 
-    // 5. Try reading processed samples from output FIFO
+    // 5. Read OLA output samples to output buffer
     monoOutputBuffer.clear();
-    bool outputReady = false;
+    bool stftReady = false;
     
-    if (outputFifo.getNumReady() >= numSamples)
+    if (stftOutputFifo.getNumReady() >= numSamples)
     {
-        outputFifo.read (monoOutputBuffer, 0, numSamples);
-        outputReady = true;
+        stftOutputFifo.read (monoOutputBuffer, 0, numSamples);
+        stftReady = true;
     }
-    else
-    {
-        // Safety: If output FIFO is insufficient, output silence for Wet
-        monoOutputBuffer.clear();
-    }
+    
+    auto* outPtr = monoOutputBuffer.getReadPointer (0);
 
-    // 6. Apply Wet/Dry crossfade or Bypass, then duplicate mono output to the stereo buffers (Upmix)
-    auto* dryPtr = monoDryBuffer.getReadPointer (0);
-    auto* wetPtr = monoOutputBuffer.getReadPointer (0);
-    
+    // 6. Output and duplicate mono output to the stereo buffers (Upmix)
     for (int ch = 0; ch < totalNumOutputChannels; ++ch)
     {
         auto* channelData = buffer.getWritePointer (ch);
         
         for (int i = 0; i < numSamples; ++i)
         {
-            float dryVal = dryPtr[i];
-            float wetVal = outputReady ? wetPtr[i] : 0.0f;
-            
-            if (isBypassed)
-            {
-                // Symmetrical clean bypass using latency-aligned dry path
-                channelData[i] = dryVal;
-            }
-            else
-            {
-                // Symmetrical crossfade between Dry and Wet
-                channelData[i] = (wetVal * intensity) + (dryVal * (1.0f - intensity));
-            }
+            channelData[i] = stftReady ? outPtr[i] : 0.0f;
         }
     }
 }
@@ -259,17 +349,33 @@ bool VoidAudioProcessor::loadModel (const juce::String& modelPath)
         // Reset and reconfigure thread and queues
         inferenceThread.prepare();
         inputFifo.reset();
-        
         dryFifo.reset();
         outputFifo.reset();
+        stftOutputFifo.reset();
         
         juce::AudioBuffer<float> silence (1, InferenceCore::MODEL_FRAME_SIZE);
         silence.clear();
         dryFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
         outputFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
         
-        // Update latency reported to host (standard MODEL_FRAME_SIZE)
-        setLatencySamples (InferenceCore::MODEL_FRAME_SIZE);
+        const int totalLatency = InferenceCore::MODEL_FRAME_SIZE + (FFT_SIZE - HOP_SIZE);
+        juce::AudioBuffer<float> stftSilence (1, totalLatency);
+        stftSilence.clear();
+        stftOutputFifo.write (stftSilence, 0, totalLatency);
+
+        // Reset FFT/OLA working arrays
+        dryTimeBuffer.fill (0.0f);
+        wetTimeBuffer.fill (0.0f);
+        fftDryComplex.fill (0.0f);
+        fftWetComplex.fill (0.0f);
+        olaOutputBuffer.fill (0.0f);
+
+        fftDryInput.fill (0.0f);
+        fftWetInput.fill (0.0f);
+        ifftOutput.fill (0.0f);
+        
+        // Update latency reported to host
+        setLatencySamples (totalLatency);
     }
     
     return success;
@@ -279,17 +385,34 @@ void VoidAudioProcessor::unloadModel()
 {
     inferenceCore.unloadModel();
     
-    setLatencySamples (InferenceCore::MODEL_FRAME_SIZE);
     inferenceThread.prepare();
     inputFifo.reset();
-    
     dryFifo.reset();
     outputFifo.reset();
+    stftOutputFifo.reset();
     
     juce::AudioBuffer<float> silence (1, InferenceCore::MODEL_FRAME_SIZE);
     silence.clear();
     dryFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
     outputFifo.write (silence, 0, InferenceCore::MODEL_FRAME_SIZE);
+    
+    const int totalLatency = InferenceCore::MODEL_FRAME_SIZE + (FFT_SIZE - HOP_SIZE);
+    juce::AudioBuffer<float> stftSilence (1, totalLatency);
+    stftSilence.clear();
+    stftOutputFifo.write (stftSilence, 0, totalLatency);
+
+    // Reset FFT/OLA working arrays
+    dryTimeBuffer.fill (0.0f);
+    wetTimeBuffer.fill (0.0f);
+    fftDryComplex.fill (0.0f);
+    fftWetComplex.fill (0.0f);
+    olaOutputBuffer.fill (0.0f);
+
+    fftDryInput.fill (0.0f);
+    fftWetInput.fill (0.0f);
+    ifftOutput.fill (0.0f);
+
+    setLatencySamples (totalLatency);
 }
 
 bool VoidAudioProcessor::isModelLoaded() const noexcept
