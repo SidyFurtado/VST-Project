@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_dsp/juce_dsp.h>
 #include <juce_core/juce_core.h>
 #include <memory>
 #include <vector>
@@ -141,12 +142,18 @@ public:
     // Constant size for standard frames (like RNNoise)
     static constexpr int MODEL_FRAME_SIZE = 480;
 
+    // Crossfade length (Hann ramp at each edge of every output frame)
+    static constexpr int CROSSFADE_LEN = 48;
+
     // Pre-allocated static buffers (Backing Store for Tensors)
     std::array<float, MODEL_FRAME_SIZE> inputFrame;
     std::array<float, MODEL_FRAME_SIZE> outputFrame;
 
-    // Load an ONNX model from file path.
-    bool loadModel (const juce::String& modelPath);
+    // Target sample rate for neural inference
+    static constexpr double MODEL_SAMPLE_RATE = 48000.0;
+
+    // Load an ONNX model from file path. Must be called from non-audio thread.
+    bool loadModel (const juce::String& modelPath, double hostSampleRate);
 
     // Unload the current model.
     void unloadModel();
@@ -161,6 +168,27 @@ public:
     // Helper to get the loaded model path.
     juce::String getLoadedModelPath() const noexcept { return loadedModelPath; }
 
+    // True if the loaded model has RNN hidden-state inputs/outputs
+    bool hasRnnStates() const noexcept { return !stateInputNames.empty(); }
+
+    // Resample a block of input audio from hostRate -> 48kHz, write to inputFrame.
+    // Returns the number of 48kHz samples produced (should equal MODEL_FRAME_SIZE).
+    int resampleToModelRate (const float* src, int numSrcSamples);
+
+    // Resample the current outputFrame from 48kHz -> hostRate.
+    // Returns number of host-rate samples written into dest.
+    int resampleToHostRate (float* dest, int maxDestSamples);
+
+    // Apply Hann crossfade ramp over CROSSFADE_LEN samples at boundaries of outputFrame,
+    // blending with the history from the previous output frame.
+    void applyCrossfade();
+
+    // Reset resampler state (call on prepareToPlay)
+    void resetResamplers (double hostSampleRate);
+
+    // Is resampling needed?
+    bool needsResampling() const noexcept { return resamplingEnabled; }
+
 private:
     Ort::Env env;
     std::unique_ptr<Ort::Session> session;
@@ -170,11 +198,50 @@ private:
 
     juce::String loadedModelPath;
 
-    // Cached model info
+    // Cached primary input/output info
     std::string inputName;
     std::string outputName;
     std::vector<int64_t> inputShape;
     std::vector<int64_t> outputShape;
+
+    // ---- RNN Hidden State Support -----------------------------------------------
+    // Persistent state tensors (h/c for LSTM, h for GRU, etc.)
+    struct StateNode
+    {
+        std::string inputName;   // e.g. "h_in"
+        std::string outputName;  // e.g. "h_out"
+        std::vector<int64_t>  shape;
+        std::vector<float>    data;  // persistent between frames
+    };
+    std::vector<StateNode> stateNodes;
+    std::vector<std::string> stateInputNames;
+    std::vector<std::string> stateOutputNames;
+    
+    // Temporary ORT value vectors used during session.Run (allocated once per loadModel)
+    std::vector<Ort::Value> allInputTensors;
+    std::vector<Ort::Value> allOutputTensors;
+    std::vector<const char*> allInputNamePtrs;
+    std::vector<const char*> allOutputNamePtrs;
+
+    // ---- Crossfade History -------------------------------------------------------
+    std::array<float, CROSSFADE_LEN> prevOutputTail;  // tail of previous outputFrame
+    bool firstFrame { true };
+
+    // ---- Resampling -------------------------------------------------------------
+    bool resamplingEnabled { false };
+    double hostSampleRate  { 48000.0 };
+
+    // Up/Down resamplers (host->model and model->host)
+    juce::LagrangeInterpolator inputResampler;
+    juce::LagrangeInterpolator outputResampler;
+
+    // Staging buffers for resampling (static max size)
+    static constexpr int MAX_RESAMPLE_BUFFER = MODEL_FRAME_SIZE * 4;
+    std::array<float, MAX_RESAMPLE_BUFFER> resampleInStage;
+    std::array<float, MAX_RESAMPLE_BUFFER> resampleOutStage;
+
+    // Detects state nodes by inspecting model input/output node names
+    void detectRnnStateNodes (Ort::AllocatorWithDefaultOptions& allocator);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InferenceCore)
 };

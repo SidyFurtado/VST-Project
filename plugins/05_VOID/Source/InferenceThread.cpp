@@ -25,48 +25,91 @@ void InferenceThread::prepare()
 
 void InferenceThread::run()
 {
+    // Staging buffer for resampled host-rate output from InferenceCore
+    static constexpr int OUT_STAGE_SIZE = InferenceCore::MODEL_FRAME_SIZE * 4;
+    std::array<float, OUT_STAGE_SIZE> outStage;
+    outStage.fill (0.0f);
+
     while (!threadShouldExit())
     {
-        // 1. Wait Event: Wait for a signal with a 10ms timeout
+        // 1. Wait for signal from audio thread (10ms timeout)
         signalEvent.wait (10);
 
         if (threadShouldExit())
             break;
 
-        // 2. Queue Check: Loop while there are enough samples to fill a frame
+        // 2. Loop while we have a full frame to consume
         while (inputFifo.getNumReady() >= InferenceCore::MODEL_FRAME_SIZE)
         {
             if (threadShouldExit())
                 break;
 
-            // 3. Read: Fetch exactly MODEL_FRAME_SIZE samples from input FIFO
-            float* inputPtrs[1] = { inferenceCore.inputFrame.data() };
-            inputFifo.read (inputPtrs, 1, InferenceCore::MODEL_FRAME_SIZE);
-
-            // 4. Neural Execution & 5. Extraction
             bool success = false;
+
             if (inferenceCore.isModelLoaded())
             {
+                // 3a. If the host sample rate differs from 48kHz, resample into inputFrame
+                if (inferenceCore.needsResampling())
+                {
+                    // Read raw samples into a temporary buffer
+                    std::array<float, InferenceCore::MODEL_FRAME_SIZE> srcBuffer;
+                    srcBuffer.fill (0.0f);
+                    float* srcPtr = srcBuffer.data();
+                    inputFifo.read (&srcPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
+
+                    // Resample host-rate -> 48kHz into inferenceCore.inputFrame
+                    inferenceCore.resampleToModelRate (srcBuffer.data(), InferenceCore::MODEL_FRAME_SIZE);
+                }
+                else
+                {
+                    // 3b. Read samples directly into the inference backing store (zero-copy path)
+                    float* inputPtr = inferenceCore.inputFrame.data();
+                    inputFifo.read (&inputPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
+                }
+
+                // 4. Run neural inference (also applies crossfade internally)
                 success = inferenceCore.process();
             }
-
-            // If bypass or inference fails, copy input directly to output (clean bypass)
-            if (!success)
+            else
             {
+                // No model: drain queue and pass through
+                float* inputPtr = inferenceCore.inputFrame.data();
+                inputFifo.read (&inputPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
                 juce::FloatVectorOperations::copy (inferenceCore.outputFrame.data(),
                                                    inferenceCore.inputFrame.data(),
                                                    InferenceCore::MODEL_FRAME_SIZE);
             }
 
-            // 6. Write: Push the contents to output FIFO (drop frame if full)
-            if (outputFifo.getFreeSpace() >= InferenceCore::MODEL_FRAME_SIZE)
+            // 5. Determine the number of host-rate output samples to push
+            int outSamples = InferenceCore::MODEL_FRAME_SIZE;
+
+            if (success && inferenceCore.needsResampling())
             {
-                const float* outputPtrs[1] = { inferenceCore.outputFrame.data() };
-                outputFifo.write (outputPtrs, 1, InferenceCore::MODEL_FRAME_SIZE);
+                // Resample 48kHz output -> host rate
+                outSamples = inferenceCore.resampleToHostRate (outStage.data(), OUT_STAGE_SIZE);
+
+                if (outSamples > 0 && outputFifo.getFreeSpace() >= outSamples)
+                {
+                    const float* outPtr = outStage.data();
+                    outputFifo.write (&outPtr, 1, outSamples);
+                }
+                else
+                {
+                    juce::Logger::writeToLog ("[VOID] Output FIFO full or resample produced 0 samples. Dropping.");
+                }
             }
             else
             {
-                juce::Logger::writeToLog ("[VOID] InferenceThread output FIFO full. Dropping output frame.");
+                // No resampling: push outputFrame directly
+                if (outputFifo.getFreeSpace() >= outSamples)
+                {
+                    const float* outPtr = inferenceCore.outputFrame.data();
+                    outputFifo.write (&outPtr, 1, outSamples);
+                }
+                else
+                {
+                    juce::Logger::writeToLog ("[VOID] InferenceThread output FIFO full. Dropping output frame.");
+                }
             }
         }
     }

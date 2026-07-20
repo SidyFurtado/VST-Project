@@ -104,5 +104,9 @@ private:
     // Output OLA FIFO
     LockFreeAudioFifo stftOutputFifo;
 
+    // Staging buffer for resampled model output (host-rate samples from InferenceCore)
+    static constexpr int RESAMPLE_OUT_MAX = InferenceCore::MODEL_FRAME_SIZE * 4;
+    std::array<float, RESAMPLE_OUT_MAX> resampledOutputStage;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoidAudioProcessor)
 };

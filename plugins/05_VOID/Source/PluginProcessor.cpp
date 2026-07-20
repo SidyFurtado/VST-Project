@@ -18,6 +18,7 @@ VoidAudioProcessor::VoidAudioProcessor()
 {
     vacuumIntensityParam = apvts.getRawParameterValue (VoidParams::vacuumIntensity());
     bypassParam = apvts.getRawParameterValue (VoidParams::bypass());
+    resampledOutputStage.fill (0.0f);
 }
 
 VoidAudioProcessor::~VoidAudioProcessor()
@@ -125,6 +126,10 @@ void VoidAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     fftWetInput.fill (0.0f);
     ifftOutput.fill (0.0f);
     
+    // Reset resamplers for the new session rate
+    inferenceCore.resetResamplers (sampleRate);
+    resampledOutputStage.fill (0.0f);
+
     // Prepare and start the inference background thread
     inferenceThread.prepare();
     
@@ -342,7 +347,7 @@ void VoidAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 
 bool VoidAudioProcessor::loadModel (const juce::String& modelPath)
 {
-    bool success = inferenceCore.loadModel (modelPath);
+    bool success = inferenceCore.loadModel (modelPath, getSampleRate());
     
     if (success)
     {
