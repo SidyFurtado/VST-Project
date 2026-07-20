@@ -15,6 +15,32 @@ static bool nameContainsAny (const std::string& name, std::initializer_list<cons
     return false;
 }
 
+static const char* tensorTypeToString (ONNXTensorElementDataType type)
+{
+    switch (type)
+    {
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:  return "Float32";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:  return "UInt8";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8:   return "Int8";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16: return "UInt16";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16:  return "Int16";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:  return "Int32";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:  return "Int64";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE: return "Float64";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING: return "String";
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:   return "Bool";
+        default: return "Unknown";
+    }
+}
+
+static juce::String shapeToString (const std::vector<int64_t>& shape)
+{
+    juce::StringArray parts;
+    for (auto dim : shape)
+        parts.add (juce::String (dim));
+    return "[" + parts.joinIntoString (", ") + "]";
+}
+
 // ==============================================================================
 // Construction / Destruction
 // ==============================================================================
@@ -198,6 +224,70 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
         // Set up resampling
         resetResamplers (hostRate);
         
+        // Log ONNX Model topology details
+        juce::Logger::writeToLog ("\n========================================================");
+        juce::Logger::writeToLog ("[VOID] ONNX Model Loaded Successfully!");
+        juce::Logger::writeToLog ("Path: " + modelPath);
+        juce::Logger::writeToLog ("--------------------------------------------------------");
+        
+        juce::Logger::writeToLog ("INPUTS (" + juce::String (numInputNodes) + "):");
+        for (size_t i = 0; i < numInputNodes; ++i)
+        {
+            auto nodeNameAlloc = session->GetInputNameAllocated (i, allocator);
+            std::string name = nodeNameAlloc.get();
+            Ort::TypeInfo typeInfo = session->GetInputTypeInfo (i);
+            auto tensorInfo = typeInfo.GetTensorTypeAndShapeInfo();
+            auto type = tensorInfo.GetElementType();
+            auto shape = tensorInfo.GetShape();
+            
+            juce::Logger::writeToLog ("  [" + juce::String (i) + "] Name: \"" + juce::String (name) + 
+                                      "\", Type: " + tensorTypeToString (type) + 
+                                      ", Shape: " + shapeToString (shape));
+        }
+        
+        juce::Logger::writeToLog ("--------------------------------------------------------");
+        juce::Logger::writeToLog ("OUTPUTS (" + juce::String (numOutputNodes) + "):");
+        for (size_t i = 0; i < numOutputNodes; ++i)
+        {
+            auto nodeNameAlloc = session->GetOutputNameAllocated (i, allocator);
+            std::string name = nodeNameAlloc.get();
+            Ort::TypeInfo typeInfo = session->GetOutputTypeInfo (i);
+            auto tensorInfo = typeInfo.GetTensorTypeAndShapeInfo();
+            auto type = tensorInfo.GetElementType();
+            auto shape = tensorInfo.GetShape();
+            
+            juce::Logger::writeToLog ("  [" + juce::String (i) + "] Name: \"" + juce::String (name) + 
+                                      "\", Type: " + tensorTypeToString (type) + 
+                                      ", Shape: " + shapeToString (shape));
+        }
+        
+        // Check for hidden states or memory-related inputs
+        bool requiresStates = false;
+        juce::StringArray hiddenStateNames;
+        for (size_t i = 1; i < numInputNodes; ++i)
+        {
+            auto nodeNameAlloc = session->GetInputNameAllocated (i, allocator);
+            std::string name = nodeNameAlloc.get();
+            if (nameContainsAny (name, {"h", "c", "state", "hidden", "cell", "rnn", "gru", "lstm", "vad", "att"}))
+            {
+                requiresStates = true;
+                hiddenStateNames.add (name);
+            }
+        }
+        
+        juce::Logger::writeToLog ("--------------------------------------------------------");
+        if (requiresStates)
+        {
+            juce::Logger::writeToLog ("[VOID] Hidden States/Memory detected: YES (Count: " + 
+                                      juce::String (hiddenStateNames.size()) + ")");
+            juce::Logger::writeToLog ("  State names: " + hiddenStateNames.joinIntoString (", "));
+        }
+        else
+        {
+            juce::Logger::writeToLog ("[VOID] Hidden States/Memory detected: NO");
+        }
+        juce::Logger::writeToLog ("========================================================\n");
+
         return true;
     }
     catch (const std::exception& e)
@@ -320,8 +410,12 @@ bool InferenceCore::process()
 {
     juce::ScopedLock sl (sessionLock);
     
-    if (session == nullptr)
-        return false;
+    if (useDummyPassthrough || session == nullptr)
+    {
+        outputFrame = inputFrame;
+        applyCrossfade();
+        return true;
+    }
         
     try
     {

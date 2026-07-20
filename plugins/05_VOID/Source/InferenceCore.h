@@ -189,6 +189,8 @@ public:
     // Is resampling needed?
     bool needsResampling() const noexcept { return resamplingEnabled; }
 
+    bool useDummyPassthrough { false };
+
 private:
     Ort::Env env;
     std::unique_ptr<Ort::Session> session;
