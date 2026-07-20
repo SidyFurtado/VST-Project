@@ -1,62 +1,74 @@
-# AUREQ 0.9.0-rc1 — Private Beta Instructions
+# ASTRA Audio Suite 0.9.0-rc1 — Private Beta Instructions (macOS)
 
-Thank you for testing AUREQ.
+Thank you for testing the ASTRA Audio Suite.
 
-This is a private macOS beta of the AUREQ VST3 plug-in by ASTRA Audio.
+This is a private macOS beta of the ASTRA Audio Suite (featuring AUREQ, LUMINAR, and GRAVITY) in Audio Unit (AU) format by ASTRA Audio.
 
 ## Download
 
-Beta DMG:
+Beta AU Suite Package:
 
 ```text
-installer/macOS/dmg/output/AUREQ-0.9.0-rc1-macOS-plugin-only.dmg
+https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg
 ```
 
 ## Installation
 
-1. Open `AUREQ-0.9.0-rc1-macOS-plugin-only.dmg`.
-2. Double-click `AUREQ Installer.pkg`.
-3. Complete the installer steps.
-4. The VST3 plug-in will be installed at:
+1. Run `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg`.
+2. Complete the installer steps.
+3. The Audio Unit components will be installed at:
 
 ```text
-/Library/Audio/Plug-Ins/VST3/AUREQ.vst3
+/Library/Audio/Plug-Ins/Components/AUREQ.component
+/Library/Audio/Plug-Ins/Components/LUMINAR.component
+/Library/Audio/Plug-Ins/Components/GRAVITY.component
 ```
 
-5. Open your DAW and rescan VST3 plug-ins.
+4. Open your DAW and rescan Audio Unit (AU) plug-ins.
 
-## DAW Rescan
+> [!NOTE]
+> **VST3 & Standalone:** In this phase, macOS VST3 is treated as a legacy/compatibility format, and the Standalone app is an internal testing tool. They are not included in the public beta installer.
 
-- FL Studio: `Plugin Manager > Find installed plugins`
-- Ableton Live: `Preferences > Plug-Ins > Rescan`
-- Reaper: `Options > Preferences > Plug-ins > VST > Re-scan`
-- Studio One / Cubase / Bitwig: use the DAW's plug-in manager/rescan flow if available.
+## Clean Install (For Upgrading Testers)
 
-Logic Pro is not a direct VST3 target. Logic validation will require AU support or a wrapper in a future phase.
+If you have installed previous testing versions using the older manufacturer code (`Manu`):
+1. Delete old user-level components:
+   ```bash
+   rm -rf ~/Library/Audio/Plug-Ins/Components/AUREQ.component
+   rm -rf ~/Library/Audio/Plug-Ins/Components/LUMINAR.component
+   rm -rf ~/Library/Audio/Plug-Ins/Components/GRAVITY.component
+   ```
+2. Clear the macOS AudioUnit cache to force a full DAW rescan of the new `AStr` components:
+   ```bash
+   rm -f ~/Library/Caches/AudioUnitCache/com.apple.audiounits.cache
+   killall -9 AudioComponentRegistrar
+   ```
+
+## DAW Rescan & AU Validation
+
+- **Logic Pro:** Automatically scans on start. You can force re-validation in `Plug-in Manager > Select ASTRA Audio plug-ins > Reset & Rescan Selection`.
+- **FL Studio macOS:** `Plugin Manager > Find installed plugins`. Ensure `Verify plugins` is enabled.
+- **Ableton Live:** `Preferences > Plug-Ins > Rescan` or toggle Use Audio Units off and on.
+- **Reaper:** `Options > Preferences > Plug-ins > VST > Re-scan` (scans all formats, including AU).
 
 ## Security Notice
 
-This beta is unsigned and not notarized.
+This beta is unsigned and not notarized. 
 
-macOS may show a security warning when opening the installer or loading the plug-in. This is expected for this private beta.
+macOS Gatekeeper may show a warning when opening the installer. 
+* **Workaround:** Right-click (or Control-click) the `.pkg` file and select **Open**, then click **Open Anyway**.
 
-The public release will require Apple Developer ID signing and Apple notarization.
+The public release will be fully notarized by Apple.
 
 ## What To Test
 
-Please test:
+Please verify:
+- Do AUREQ, LUMINAR, and GRAVITY appear in your DAW as Audio Units (AU)?
+- Does the manufacturer correctly say `ASTRA Audio` (under manufacturer ID `AStr`)?
+- Does audio pass through and process cleanly?
+- Does the spectrum analyzer (AUREQ) run in real-time?
+- Do factory presets load and operate correctly?
+- Does DAW project saving/restoring preserve plug-in state?
+- Any crashes, hangs, or installation issues?
 
-- Does AUREQ appear as a VST3?
-- Does the UI open?
-- Does audio pass through?
-- Does the spectrum analyzer appear while audio is playing?
-- Do factory presets load?
-- Do user presets save/load?
-- Does A/B work?
-- Does Undo/Redo work?
-- Does Dynamic EQ work?
-- Do Channel Modes work?
-- Does saving/reopening a DAW project restore the state?
-- Any crashes, hangs, visual glitches, or installation confusion?
-
-Please send screenshots or short videos if possible.
+Please send screenshots or short videos to the developer.

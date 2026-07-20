@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="br.com.sidyfurtado.astra-suite.au" postinstall-action="none" version="0.9.0" format-version="2" generator-version="InstallCmds-864.12 (25F71)" install-location="/" auth="root">
+    <payload numberOfFiles="49" installKBytes="74211"/>
+    <bundle path="./Library/Audio/Plug-Ins/Components/LUMINAR.component" id="br.com.sidyfurtado.luminar" CFBundleShortVersionString="0.1.0" CFBundleVersion="0.1.0"/>
+    <bundle path="./Library/Audio/Plug-Ins/Components/AUREQ.component" id="br.com.sidyfurtado.aureq" CFBundleShortVersionString="0.9.0" CFBundleVersion="0.9.0"/>
+    <bundle path="./Library/Audio/Plug-Ins/Components/GRAVITY.component" id="br.com.sidyfurtado.gravity" CFBundleShortVersionString="0.1.0" CFBundleVersion="0.1.0"/>
+    <bundle-version>
+        <bundle id="br.com.sidyfurtado.luminar"/>
+        <bundle id="br.com.sidyfurtado.aureq"/>
+        <bundle id="br.com.sidyfurtado.gravity"/>
+    </bundle-version>
+    <upgrade-bundle>
+        <bundle id="br.com.sidyfurtado.luminar"/>
+        <bundle id="br.com.sidyfurtado.aureq"/>
+        <bundle id="br.com.sidyfurtado.gravity"/>
+    </upgrade-bundle>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier/>
+    <relocate/>
+</pkg-info>

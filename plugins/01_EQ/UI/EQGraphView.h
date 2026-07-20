@@ -101,6 +101,38 @@ namespace AUREQ
         std::vector<float> spectrumBins;
         int spectrumNumBins = 0;
 
+        struct SpectrumPeakCandidate
+        {
+            float frequencyHz = 0.0f;
+            float magnitudeDb = -90.0f;
+            float prominenceDb = 0.0f;
+            float normalizedX = 0.0f;
+            float normalizedY = 1.0f;
+        };
+
+        struct SpectrumPeakMarker
+        {
+            float frequencyHz = 0.0f;
+            float magnitudeDb = -90.0f;
+            float normalizedX = 0.0f;
+            float normalizedY = 1.0f;
+            float alpha = 0.0f;
+            int holdFrames = 0;
+            int ageFrames = 0;
+            bool active = false;
+        };
+
+        static constexpr int maxSpectrumPeakCandidates = 32;
+        static constexpr int maxSpectrumPeakMarkers = 5;
+
+        std::array<SpectrumPeakCandidate, maxSpectrumPeakCandidates> spectrumPeakCandidates;
+        int numSpectrumPeakCandidates = 0;
+        std::array<SpectrumPeakMarker, maxSpectrumPeakMarkers> spectrumPeakMarkers;
+
+        void updateSpectrumPeakMarkers();
+        void drawSpectrumPeakMarkers (juce::Graphics& g, juce::Rectangle<int> plotBounds, bool isDark) const;
+        static juce::String formatSpectrumPeakFrequency (float frequencyHz);
+
         // Convert a normalized x coordinate (pixel) back to frequency in Hz
         float getFrequencyForX(float x) const;
 

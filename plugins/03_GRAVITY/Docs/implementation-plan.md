@@ -42,6 +42,53 @@ Required after user approval:
 cmake --build build --config Release
 ```
 
+## Phase 23.5A - AU Format Validation / Manufacturer Code Fix
+
+Status: completed.
+
+### Scope
+
+- Replace `MANUFACTURER_CODE AStr` with `PLUGIN_MANUFACTURER_CODE AStr` in `juce_add_plugin(GRAVITY)`.
+- Preserve `PRODUCT_NAME "GRAVITY"`, `PLUGIN_CODE Grvt`, `BUNDLE_ID "br.com.sidyfurtado.gravity"`, version, DSP, APVTS, presets, UI, and installers.
+- Rebuild artifacts and confirm the generated AU uses manufacturer `AStr` instead of JUCE fallback `Manu`.
+- Validate with `cmake --build build` and `./build/tests/AUREQ_FilterTests`.
+
+## Phase 23.5C - macOS AU-First Suite PKG Generation
+
+Status: completed.
+
+### Scope
+
+- Copy `GRAVITY.component` into `installer/macOS/au-first-suite/payload/Library/Audio/Plug-Ins/Components/`.
+- Generate `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU-component.pkg` and `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg`.
+- Validate non-destructively with `pkgutil --expand`, `lsbom`, and `pkgutil --check-signature`.
+- Confirm the package is AU-only, with no VST3, no Standalone, no `/Applications` install destination, and no `/Library/Audio/Plug-Ins/VST3` payload.
+- Do not run the installer, do not install to `/Library`, do not use `sudo`, and do not run `auval` in this phase.
+
+## Phase 23.5D-R - AU Duplicate Cleanup & AudioUnit Cache Refresh
+
+Status: completed.
+
+### Scope
+
+- Backup legacy components in `backups/au-user-duplicates-cleanup/`.
+- Remove legacy user duplicate component `~/Library/Audio/Plug-Ins/Components/GRAVITY.component`.
+- Delete `~/Library/Caches/AudioUnitCache/com.apple.audiounits.cache`.
+- Restart `AudioComponentRegistrar`.
+- Confirm successful validation of `/Library` component with `auval` under manufacturer `AStr`.
+
+## Phase 23.5E - Download Page / Beta Docs Update
+
+Status: completed.
+
+### Scope
+
+- Update download links and format specs in `docs/index.html` and `docs/site/index.html`.
+- Replace single warning line with structural warnings container block containing security, cache and SmartScreen notes.
+- Refactor private beta instruction guides and installation guide.
+- Add cache clearing warnings to the suite README.txt.
+- Register Phase 23.5E in monorepo checklists and plans.
+
 ## Phase 19.5 - CI/CD and Official Installer Integration
 
 Status: edited, awaiting user-triggered build validation.

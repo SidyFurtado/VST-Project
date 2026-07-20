@@ -532,6 +532,53 @@ Este documento estabelece o roadmap de desenvolvimento técnico dividido em fase
     *   [x] Criar formulario de feedback cobrindo DAW, macOS, CPU, deteccao VST3, UI, audio, spectrum, presets, user presets, A/B, Undo/Redo, Dynamic EQ, Channel Mode, salvar/reabrir projeto, crashes e dificuldade de instalacao.
     *   [x] Preservar codigo, CMake, APVTS, DSP, analyzer, presets, UI, PKG/DMG, livros e PDFs.
 
+### Fase 23.5A: AU Format Validation / Manufacturer Code Fix [CONCLUÍDA]
+*   **Objetivo**: Corrigir a identidade AU do AUREQ antes da distribuição macOS AU-first, usando o argumento CMake correto do JUCE para o manufacturer code.
+*   **Ações**:
+    *   [x] Substituir `MANUFACTURER_CODE AStr` por `PLUGIN_MANUFACTURER_CODE AStr` no `juce_add_plugin(AUREQ)`.
+    *   [x] Preservar `PRODUCT_NAME "AUREQ"`, `PLUGIN_CODE Aurq`, `BUNDLE_ID "br.com.sidyfurtado.aureq"`, versão, DSP, APVTS, presets, UI e installers.
+    *   [x] Rebuildar os artefatos e confirmar que o AU gerado usa manufacturer `AStr` em vez do fallback JUCE `Manu`.
+    *   [x] Validar com `cmake --build build` e `./build/tests/AUREQ_FilterTests`.
+
+### Fase 23.5C: macOS AU-First Suite PKG Generation [CONCLUÍDA]
+*   **Objetivo**: Criar o primeiro instalador macOS AU-first da ASTRA Audio Suite, contendo apenas Audio Units e mantendo VST3/Standalone fora do pacote público inicial.
+*   **Ações**:
+    *   [x] Copiar `AUREQ.component` para `installer/macOS/au-first-suite/payload/Library/Audio/Plug-Ins/Components/`.
+    *   [x] Gerar `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU-component.pkg` e `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg`.
+    *   [x] Validar o pacote de forma nao destrutiva com `pkgutil --expand`, `lsbom` e `pkgutil --check-signature`.
+    *   [x] Confirmar que o pacote nao inclui VST3, Standalone, `/Applications` ou `/Library/Audio/Plug-Ins/VST3`.
+    *   [x] Nao executar o installer, nao instalar em `/Library`, nao usar `sudo` e nao rodar `auval` nesta fase.
+
+### Fase 23.5D-R: AU Duplicate Cleanup & AudioUnit Cache Refresh [CONCLUÍDA]
+*   **Objetivo**: Corrigir a colisão de registro de Audio Units no macOS removendo duplicatas locais em `~/Library` e limpando o cache.
+*   **Ações**:
+    *   [x] Criar backup seguro com timestamp das duplicatas em `backups/au-user-duplicates-cleanup/`.
+    *   [x] Remover duplicatas legadas do usuário em `~/Library/Audio/Plug-Ins/Components/AUREQ.component`.
+    *   [x] Remover arquivo de cache `~/Library/Caches/AudioUnitCache/com.apple.audiounits.cache`.
+    *   [x] Reiniciar o daemon `AudioComponentRegistrar`.
+    *   [x] Validar que o AU instalado pelo PKG em `/Library/Audio/Plug-Ins/Components/` é reconhecido e passa no `auval` com sucesso sob o fabricante `AStr`.
+
+### Fase 23.5E: Download Page / Beta Docs Update [CONCLUÍDA]
+*   **Objetivo**: Atualizar a documentação do beta privado, manuais de instalação e página de download para alinhar com a estratégia de distribuição macOS AU-first e Windows VST3-first.
+*   **Ações**:
+    *   [x] Atualizar links e especificações visuais de formato nos arquivos `docs/index.html` e `docs/site/index.html`.
+    *   [x] Substituir caixa de avisos simples por painel de avisos estruturado com notas beta, notas macOS de cache e notas Windows de SmartScreen.
+    *   [x] Refatorar os guias `AUREQ-0.9.0-rc1-private-beta-instructions.md`, `AUREQ-0.9.0-rc1-windows-beta-instructions.md` e `AUREQ-macos-installation-guide.md`.
+    *   [x] Injetar notas de limpeza de cache de Audio Units e aviso de SmartScreen no README.txt da suite.
+    *   [x] Atualizar checklist e planos de implementação no monorepo.
+
+### Fase 24.0: Spectrum Peak Picking / Caçador de Ressonâncias [CONCLUÍDA]
+*   **Objetivo**: Detectar picos/resonâncias no analyzer FFT já existente e exibir marcadores visuais discretos no `EQGraphView`, sem alterar áudio, DSP, APVTS, IDs, presets ou transporte audio→UI.
+*   **Ações**:
+    *   [x] Implementar peak picking visual em `EQGraphView::setSpectrumData()` a partir dos bins dBFS já recebidos do `AnalyzerProcessor`.
+    *   [x] Detectar máximos locais acima de `-60 dB`, ignorando extremos aproximados abaixo de `40 Hz` e acima de `18 kHz`.
+    *   [x] Exigir proeminência mínima de `6 dB` acima da média local e limitar a seleção final a até 5 picos.
+    *   [x] Suprimir picos próximos usando distância logarítmica mínima de `1/6` de oitava.
+    *   [x] Adicionar persistência temporal com matching por proximidade de frequência, hold curto, fade in e fade out.
+    *   [x] Desenhar bolinhas e labels de frequência como camada não interativa entre o spectrum e a curva/handles.
+    *   [x] Preservar `PluginProcessor`, `PluginEditor`, `AnalyzerFIFO`, `AnalyzerProcessor`, CMake, APVTS, ParameterIDs, presets, LUMINAR, GRAVITY, installers, site e workflows.
+    *   [x] Documentar risco restante: o mapeamento bin→frequência continua usando a referência visual fixa de `44100 Hz`, herdada do analyzer atual.
+
 ### Fase 17.0: Windows Plugin-Only Installer Plan [CONCLUÍDA]
 *   **Objetivo**: Preparar a estrutura inicial do instalador Windows VST3-only do AUREQ 0.9.0-rc1 com Inno Setup, sem gerar `.exe` final e sem usar artefato macOS como payload Windows.
 *   **Ações**:

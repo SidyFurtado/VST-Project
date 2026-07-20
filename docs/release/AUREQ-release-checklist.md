@@ -33,7 +33,7 @@ Status:
 - [DONE] `BUNDLE_ID "br.com.sidyfurtado.aureq"` — correto, sem espaços
 - [DONE] `COMPANY_NAME "ASTRA Audio"` — correto
 - [DONE] `PLUGIN_CODE Aurq` — correto
-- [DONE] `MANUFACTURER_CODE AStr` — correto
+- [DONE] `PLUGIN_MANUFACTURER_CODE AStr` — correto; AU validado como `aufx / Aurq / AStr`
 - [FUTURE] Ícone do plugin `.icns` (macOS) — Fase 15.1
 - [FUTURE] Ícone do plugin `.ico` (Windows) — Fase 15.1
 - [FUTURE] Integração do ícone nos bundles — Fase 15.1
@@ -78,6 +78,10 @@ Status:
 - [BLOCKED] Fase 15.2C reexecutada em 2026-05-28 — backup criado, mas `sudo installer` bloqueado por autenticação indisponível na sessão
 - [DONE] Fase 15.2H hardening macOS — duplicatas, metadata, Gatekeeper e DMG UX documentados
 - [DONE] Fase 16.3 refresh beta macOS — PKG/DMG regenerados com build mais recente, sem instalar
+- [DONE] Fase 23.5C AU-first suite PKG — pacote AU-only criado para AUREQ, LUMINAR e GRAVITY em `/Library/Audio/Plug-Ins/Components/`, sem VST3/Standalone e sem instalar
+- [DONE] Fase 23.5D-R AU Duplicate Cleanup — remoção de duplicatas antigas do usuário (~/Library) e limpeza do AudioUnitCache completada, com revalidação 100% PASS
+- [DONE] Fase 23.5E Download Page / Beta Docs Update — atualizações de página de download, guias de instalação, README e metadados de estratégia AU-first/VST3-first completadas
+- [DONE] Fase 23.5F Download Artifact Hosting Fix — asset AU-only publicado no GitHub Release `v1.0.0`, links macOS migrados para GitHub Releases e links Windows VST3 validados
 - [FUTURE] Uninstaller script
 - [DONE] Background e ícone do instalador (Fases 15.1 e 15.2B)
 - [FUTURE] Assinatura do `.pkg` / `.dmg` (depende do Bloco 4)

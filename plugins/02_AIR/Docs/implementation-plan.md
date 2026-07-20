@@ -178,6 +178,45 @@
 - Configuração de trigger do GitHub Releases para gerar Draft Release automático em tags `v*`
 - Sincronização do site (`docs/site/index.html`): adição do card LUMINAR (Amber #F6C90E, curva high-shelf animada em SVG) e correção do mojibake do footer
 
+### ✅ Fase 23.5A — AU Format Validation / Manufacturer Code Fix
+**Status:** concluída; identidade AU corrigida antes da distribuição macOS AU-first.
+
+**Escopo:**
+- Substituição de `MANUFACTURER_CODE AStr` por `PLUGIN_MANUFACTURER_CODE AStr` no `juce_add_plugin(LUMINAR)`.
+- Preservação de `PRODUCT_NAME "LUMINAR"`, `PLUGIN_CODE Lmnr`, `BUNDLE_ID "br.com.sidyfurtado.luminar"`, versão, DSP, APVTS, presets, UI e installers.
+- Rebuild dos artefatos e confirmação de que o AU gerado usa manufacturer `AStr` em vez do fallback JUCE `Manu`.
+- Validação com `cmake --build build` e `./build/tests/AUREQ_FilterTests`.
+
+### ✅ Fase 23.5C — macOS AU-First Suite PKG Generation
+**Status:** concluída; `LUMINAR.component` incluído no primeiro instalador macOS AU-only da ASTRA Audio Suite.
+
+**Escopo:**
+- Cópia de `LUMINAR.component` para `installer/macOS/au-first-suite/payload/Library/Audio/Plug-Ins/Components/`.
+- Geração de `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU-component.pkg` e `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg`.
+- Validação não destrutiva com `pkgutil --expand`, `lsbom` e `pkgutil --check-signature`.
+- Confirmação de pacote AU-only, sem VST3, sem Standalone, sem instalação em `/Applications` e sem destino `/Library/Audio/Plug-Ins/VST3`.
+- Nenhum DSP, APVTS, UI, preset, installer Windows ou GitHub Actions alterado.
+
+### ✅ Fase 23.5D-R — AU Duplicate Cleanup & AudioUnit Cache Refresh
+**Status:** concluída.
+
+**Escopo:**
+- Criação de backup das duplicatas em `backups/au-user-duplicates-cleanup/`.
+- Remoção do componente de usuário legado em `~/Library/Audio/Plug-Ins/Components/LUMINAR.component`.
+- Remoção do cache `~/Library/Caches/AudioUnitCache/com.apple.audiounits.cache`.
+- Reinicialização do `AudioComponentRegistrar`.
+- Revalidação bem-sucedida com `auval` sob o fabricante `AStr`.
+
+### ✅ Fase 23.5E — Download Page / Beta Docs Update
+**Status:** concluída.
+
+**Escopo:**
+- Atualizar links e especificações visuais de formato nos arquivos `docs/index.html` e `docs/site/index.html`.
+- Substituir caixa de avisos simples por painel de avisos estruturado com notas beta, notas macOS de cache e notas Windows de SmartScreen.
+- Refatorar os guias `AUREQ-0.9.0-rc1-private-beta-instructions.md`, `AUREQ-0.9.0-rc1-windows-beta-instructions.md` e `AUREQ-macos-installation-guide.md`.
+- Injetar notas de limpeza de cache de Audio Units e aviso de SmartScreen no README.txt da suite.
+- Atualizar checklist e planos de implementação no monorepo.
+
 ### ⬜ Fase 18.8 — Localization PT-BR / EN
 - Adaptar padrão `Localization.h/.cpp` do AUREQ
 - Labels dos knobs, categorias de presets, settings menu

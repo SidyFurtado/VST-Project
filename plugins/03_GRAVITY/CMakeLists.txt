@@ -14,7 +14,7 @@ if(TARGET juce::juce_audio_processors)
         # ---- Identificação única do plugin -----------------------------------------
         # PLUGIN_CODE deve ser 4 chars únicos — diferente do AUREQ (Aurq) e LUMINAR (Lmnr)
         PLUGIN_CODE       Grvt
-        MANUFACTURER_CODE AStr
+        PLUGIN_MANUFACTURER_CODE AStr
 
         # ---- Bundle / Company ------------------------------------------------------
         BUNDLE_ID        "br.com.sidyfurtado.gravity"

@@ -19,21 +19,21 @@ AUREQ é um equalizador paramétrico premium de 8 bandas desenvolvido com JUCE/C
 
 | Plataforma | Formato | Status |
 |------------|---------|--------|
-| macOS (Apple Silicon / Intel) | VST3 | ✅ Disponível |
-| macOS | Standalone | ✅ Disponível |
-| Windows (64-bit) | VST3 | 🔄 Build não gerado neste ambiente |
-| Windows | Standalone | 🔄 Build não gerado neste ambiente |
+| macOS (Apple Silicon / Intel) | Audio Unit (AU) | ✅ Principal / recomendado |
+| Windows (64-bit) | VST3 | ✅ Principal / recomendado |
+| macOS | VST3 | 🧪 Compatibilidade/dev/QA |
+| macOS | Standalone | 🧪 Ferramenta interna/dev/QA |
 
 ---
 
 ## Requisitos de Sistema — macOS
 
-- **macOS**: 10.13 High Sierra ou superior (recomendado: 12 Monterey+)
-- **DAW compatível com VST3**: Reaper, Ableton Live, Bitwig, Logic Pro*, GarageBand*
+- **macOS**: 10.15 Catalina ou superior (recomendado: 12 Monterey+)
+- **DAW compatível com Audio Unit (AU)**: Logic Pro, GarageBand, Final Cut Pro, Ableton Live, FL Studio macOS, Reaper, etc.
 - **Arquitetura**: Universal Binary (Apple Silicon + Intel) — *confirmar na versão final*
-- **Espaço em disco**: ~50 MB (VST3 + Standalone)
+- **Espaço em disco**: ~50 MB
 
-> *Logic Pro e GarageBand suportam AU (Audio Units); o AUREQ neste RC está disponível apenas como VST3. Suporte AU é roadmap futuro.
+> No macOS, a distribuição pública/tester é AU-first. VST3 macOS e Standalone permanecem caminhos de compatibilidade, desenvolvimento e QA.
 
 ---
 
@@ -112,19 +112,20 @@ AUREQ é um equalizador paramétrico premium de 8 bandas desenvolvido com JUCE/C
 
 ## Limitações Conhecidas neste RC
 
-1. **DAW Validation pendente** — nenhuma DAW disponível no ambiente de build; o VST3 não foi testado em host.
+1. **DAW Validation pendente** — validação humana em hosts ainda depende de testes em DAWs reais.
 2. **Sem assinatura de código** — RC não assinado e não notarizado. macOS Gatekeeper pode exibir aviso ao abrir.
-3. **Sem instalador** — instalação manual conforme os guias em `docs/release/`.
-4. **Windows build não disponível** — o ambiente de build atual é macOS. Build Windows é roadmap.
-5. **AU (Audio Units) não disponível** — apenas VST3 e Standalone neste RC.
+3. **Instalador macOS AU unsigned** — o pacote AU-first está publicado via GitHub Releases, mas ainda não possui Developer ID/notarização.
+4. **Windows installer unsigned** — o instalador VST3 pode acionar SmartScreen.
+5. **Standalone não é produto público principal** — permanece ferramenta interna/dev/QA.
 6. **Atalhos Cmd+Z podem ser interceptados por DAW** — menu Settings > Undo/Redo é o caminho confiável em host.
 
 ---
 
 ## Caminhos dos Artefatos (Staging RC)
 
-- **VST3 (macOS)**: `release/AUREQ-0.9.0-rc1/macOS/VST3/AUREQ.vst3`
-- **Standalone (macOS)**: `release/AUREQ-0.9.0-rc1/macOS/Standalone/AUREQ.app`
+- **macOS AU Suite (público/tester)**: `https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg`
+- **Windows VST3 AUREQ (público/tester)**: `https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe`
+- **VST3/Standalone macOS**: mantidos apenas como artefatos de compatibilidade/dev/QA.
 
 ---
 

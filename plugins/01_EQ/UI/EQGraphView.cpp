@@ -1,9 +1,48 @@
 #include "EQGraphView.h"
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 
 namespace AUREQ
 {
+    namespace
+    {
+        constexpr float analyzerReferenceSampleRate = 44100.0f;
+        constexpr float analyzerNyquistHz = analyzerReferenceSampleRate * 0.5f;
+        constexpr float spectrumFloorDb = -90.0f;
+        constexpr float spectrumCeilingDb = 0.0f;
+        constexpr float peakMinimumDb = -60.0f;
+        constexpr float peakMinimumFrequencyHz = 40.0f;
+        constexpr float peakMaximumFrequencyHz = 18000.0f;
+        constexpr float peakMinimumProminenceDb = 6.0f;
+        constexpr float peakSuppressionOctaves = 1.0f / 6.0f;
+        constexpr float peakMatchOctaves = 1.0f / 5.0f;
+
+        float frequencyToNormalizedX (float frequencyHz)
+        {
+            constexpr float minF = 20.0f;
+            constexpr float maxF = 20000.0f;
+            frequencyHz = juce::jlimit (minF, maxF, frequencyHz);
+            return (std::log (frequencyHz) - std::log (minF)) / (std::log (maxF) - std::log (minF));
+        }
+
+        float spectrumDbToNormalizedY (float db)
+        {
+            db = juce::jlimit (spectrumFloorDb, spectrumCeilingDb, db);
+            return (db - spectrumCeilingDb) / (spectrumFloorDb - spectrumCeilingDb);
+        }
+
+        float octaveDistance (float firstHz, float secondHz)
+        {
+            if (firstHz <= 0.0f || secondHz <= 0.0f)
+                return std::numeric_limits<float>::max();
+
+            return std::abs (std::log2 (firstHz / secondHz));
+        }
+
+    }
+
     EQGraphView::EQGraphView()
     {
         // Set default theme colors (Dark mode)
@@ -37,7 +76,7 @@ namespace AUREQ
 
     void EQGraphView::setSpectrumData (const float* bins, int numBins)
     {
-        if (numBins <= 0)
+        if (bins == nullptr || numBins <= 0)
             return;
 
         // Reserve on first call to avoid repeated allocations.
@@ -46,7 +85,223 @@ namespace AUREQ
 
         std::memcpy (spectrumBins.data(), bins, (size_t) numBins * sizeof (float));
         spectrumNumBins = numBins;
+
+        updateSpectrumPeakMarkers();
         repaint();
+    }
+
+    void EQGraphView::updateSpectrumPeakMarkers()
+    {
+        numSpectrumPeakCandidates = 0;
+
+        if (spectrumNumBins > 2)
+        {
+            const int firstBin = juce::jlimit (1, spectrumNumBins - 2,
+                                              (int) std::ceil (peakMinimumFrequencyHz / analyzerNyquistHz
+                                                               * (float) (spectrumNumBins - 1)));
+            const int lastBin = juce::jlimit (1, spectrumNumBins - 2,
+                                             (int) std::floor (peakMaximumFrequencyHz / analyzerNyquistHz
+                                                               * (float) (spectrumNumBins - 1)));
+            constexpr int localWindowRadius = 8;
+
+            for (int i = firstBin; i <= lastBin; ++i)
+            {
+                const float centerDb = spectrumBins[(size_t) i];
+
+                if (centerDb < peakMinimumDb)
+                    continue;
+
+                if (centerDb <= spectrumBins[(size_t) i - 1] || centerDb <= spectrumBins[(size_t) i + 1])
+                    continue;
+
+                const int localStart = std::max (firstBin, i - localWindowRadius);
+                const int localEnd = std::min (lastBin, i + localWindowRadius);
+                float localSum = 0.0f;
+                int localCount = 0;
+
+                for (int k = localStart; k <= localEnd; ++k)
+                {
+                    if (k == i)
+                        continue;
+
+                    localSum += spectrumBins[(size_t) k];
+                    ++localCount;
+                }
+
+                if (localCount <= 0)
+                    continue;
+
+                const float localAverageDb = localSum / (float) localCount;
+                const float prominenceDb = centerDb - localAverageDb;
+
+                if (prominenceDb < peakMinimumProminenceDb)
+                    continue;
+
+                const float frequencyHz = (float) i / (float) (spectrumNumBins - 1) * analyzerNyquistHz;
+
+                if (frequencyHz < peakMinimumFrequencyHz || frequencyHz > peakMaximumFrequencyHz)
+                    continue;
+
+                SpectrumPeakCandidate candidate;
+                candidate.frequencyHz = frequencyHz;
+                candidate.magnitudeDb = centerDb;
+                candidate.prominenceDb = prominenceDb;
+                candidate.normalizedX = frequencyToNormalizedX (frequencyHz);
+                candidate.normalizedY = spectrumDbToNormalizedY (centerDb);
+
+                const auto isCandidateStronger = [] (const SpectrumPeakCandidate& first,
+                                                     const SpectrumPeakCandidate& second)
+                {
+                    if (std::abs (first.prominenceDb - second.prominenceDb) > 0.01f)
+                        return first.prominenceDb > second.prominenceDb;
+
+                    return first.magnitudeDb > second.magnitudeDb;
+                };
+
+                int insertAt = numSpectrumPeakCandidates;
+                while (insertAt > 0 && isCandidateStronger (candidate, spectrumPeakCandidates[(size_t) insertAt - 1]))
+                    --insertAt;
+
+                if (insertAt >= maxSpectrumPeakCandidates)
+                    continue;
+
+                const int lastMoveIndex = std::min (numSpectrumPeakCandidates, maxSpectrumPeakCandidates - 1);
+                for (int move = lastMoveIndex; move > insertAt; --move)
+                    spectrumPeakCandidates[(size_t) move] = spectrumPeakCandidates[(size_t) move - 1];
+
+                spectrumPeakCandidates[(size_t) insertAt] = candidate;
+                numSpectrumPeakCandidates = std::min (numSpectrumPeakCandidates + 1, maxSpectrumPeakCandidates);
+            }
+        }
+
+        std::array<SpectrumPeakCandidate, maxSpectrumPeakMarkers> selectedPeaks;
+        int numSelectedPeaks = 0;
+
+        for (int candidateIndex = 0; candidateIndex < numSpectrumPeakCandidates
+             && numSelectedPeaks < maxSpectrumPeakMarkers; ++candidateIndex)
+        {
+            const auto& candidate = spectrumPeakCandidates[(size_t) candidateIndex];
+            bool tooClose = false;
+
+            for (int selectedIndex = 0; selectedIndex < numSelectedPeaks; ++selectedIndex)
+            {
+                if (octaveDistance (candidate.frequencyHz, selectedPeaks[(size_t) selectedIndex].frequencyHz)
+                    < peakSuppressionOctaves)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (! tooClose)
+                selectedPeaks[(size_t) numSelectedPeaks++] = candidate;
+        }
+
+        bool selectedMatched[maxSpectrumPeakMarkers] = {};
+        bool markerMatched[maxSpectrumPeakMarkers] = {};
+
+        for (int markerIndex = 0; markerIndex < maxSpectrumPeakMarkers; ++markerIndex)
+        {
+            auto& marker = spectrumPeakMarkers[(size_t) markerIndex];
+
+            if (! marker.active && marker.alpha <= 0.0f)
+                continue;
+
+            int bestPeakIndex = -1;
+            float bestDistance = peakMatchOctaves;
+
+            for (int peakIndex = 0; peakIndex < numSelectedPeaks; ++peakIndex)
+            {
+                if (selectedMatched[peakIndex])
+                    continue;
+
+                const float distance = octaveDistance (marker.frequencyHz, selectedPeaks[(size_t) peakIndex].frequencyHz);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestPeakIndex = peakIndex;
+                }
+            }
+
+            if (bestPeakIndex >= 0)
+            {
+                const auto& peak = selectedPeaks[(size_t) bestPeakIndex];
+                marker.frequencyHz = marker.frequencyHz > 0.0f ? marker.frequencyHz * 0.72f + peak.frequencyHz * 0.28f
+                                                               : peak.frequencyHz;
+                marker.magnitudeDb = marker.magnitudeDb * 0.72f + peak.magnitudeDb * 0.28f;
+                marker.normalizedX = marker.normalizedX * 0.72f + peak.normalizedX * 0.28f;
+                marker.normalizedY = marker.normalizedY * 0.72f + peak.normalizedY * 0.28f;
+                marker.alpha = juce::jmin (1.0f, marker.alpha + 0.24f);
+                marker.holdFrames = 6;
+                marker.ageFrames = 0;
+                marker.active = true;
+                selectedMatched[bestPeakIndex] = true;
+                markerMatched[markerIndex] = true;
+            }
+        }
+
+        for (int peakIndex = 0; peakIndex < numSelectedPeaks; ++peakIndex)
+        {
+            if (selectedMatched[peakIndex])
+                continue;
+
+            int targetMarkerIndex = -1;
+            float lowestAlpha = std::numeric_limits<float>::max();
+
+            for (int markerIndex = 0; markerIndex < maxSpectrumPeakMarkers; ++markerIndex)
+            {
+                const auto& marker = spectrumPeakMarkers[(size_t) markerIndex];
+                if (! marker.active || marker.alpha <= 0.01f)
+                {
+                    targetMarkerIndex = markerIndex;
+                    break;
+                }
+
+                if (! markerMatched[markerIndex] && marker.alpha < lowestAlpha)
+                {
+                    lowestAlpha = marker.alpha;
+                    targetMarkerIndex = markerIndex;
+                }
+            }
+
+            if (targetMarkerIndex < 0)
+                continue;
+
+            const auto& peak = selectedPeaks[(size_t) peakIndex];
+            auto& marker = spectrumPeakMarkers[(size_t) targetMarkerIndex];
+            marker.frequencyHz = peak.frequencyHz;
+            marker.magnitudeDb = peak.magnitudeDb;
+            marker.normalizedX = peak.normalizedX;
+            marker.normalizedY = peak.normalizedY;
+            marker.alpha = juce::jmax (marker.alpha, 0.22f);
+            marker.holdFrames = 6;
+            marker.ageFrames = 0;
+            marker.active = true;
+            markerMatched[targetMarkerIndex] = true;
+            selectedMatched[peakIndex] = true;
+        }
+
+        for (int markerIndex = 0; markerIndex < maxSpectrumPeakMarkers; ++markerIndex)
+        {
+            auto& marker = spectrumPeakMarkers[(size_t) markerIndex];
+
+            if (markerMatched[markerIndex])
+                continue;
+
+            if (marker.holdFrames > 0)
+                --marker.holdFrames;
+            else
+                marker.alpha = juce::jmax (0.0f, marker.alpha - 0.07f);
+
+            ++marker.ageFrames;
+
+            if (marker.alpha <= 0.01f)
+            {
+                marker.alpha = 0.0f;
+                marker.active = false;
+                marker.holdFrames = 0;
+            }
+        }
     }
 
     void EQGraphView::paint(juce::Graphics& g)
@@ -262,6 +517,8 @@ namespace AUREQ
                                                                   juce::PathStrokeType::curved,
                                                                   juce::PathStrokeType::rounded));
         }
+
+        drawSpectrumPeakMarkers (g, plotBounds, isDark);
 
         // 7b. Draw combined theoretical EQ Curve (on top of spectrum)
         if (plotBounds.getWidth() > 0)
@@ -847,6 +1104,76 @@ namespace AUREQ
                 g.drawText(qStr, juce::roundToInt(panelRect.getRight() - contentPaddingX - 40), juce::roundToInt(bottomRowY), 40, 10, juce::Justification::right, true);
             }
         }
+    }
+
+    void EQGraphView::drawSpectrumPeakMarkers (juce::Graphics& g, juce::Rectangle<int> plotBounds, bool isDark) const
+    {
+        if (plotBounds.getWidth() <= 0 || plotBounds.getHeight() <= 0)
+            return;
+
+        const auto mint = juce::Colour (45, 212, 191);
+        const auto markerColour = themeColors.accent.interpolatedWith (mint, 0.45f);
+
+        for (const auto& marker : spectrumPeakMarkers)
+        {
+            if (! marker.active || marker.alpha <= 0.01f)
+                continue;
+
+            const float alpha = juce::jlimit (0.0f, 1.0f, marker.alpha);
+            const float x = (float) plotBounds.getX() + marker.normalizedX * (float) plotBounds.getWidth();
+            const float y = (float) plotBounds.getY() + marker.normalizedY * (float) plotBounds.getHeight();
+
+            if (! plotBounds.toFloat().expanded (12.0f, 20.0f).contains (x, y))
+                continue;
+
+            const float glowRadius = 8.0f;
+            const float dotRadius = 2.8f;
+
+            g.setColour (markerColour.withAlpha ((isDark ? 0.15f : 0.08f) * alpha));
+            g.fillEllipse (x - glowRadius, y - glowRadius, glowRadius * 2.0f, glowRadius * 2.0f);
+
+            g.setColour (markerColour.withAlpha ((isDark ? 0.42f : 0.28f) * alpha));
+            g.drawEllipse (x - 4.5f, y - 4.5f, 9.0f, 9.0f, 0.75f);
+
+            g.setColour (markerColour.withAlpha ((isDark ? 0.92f : 0.72f) * alpha));
+            g.fillEllipse (x - dotRadius, y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
+
+            g.setColour (juce::Colours::white.withAlpha ((isDark ? 0.50f : 0.72f) * alpha));
+            g.fillEllipse (x - 1.2f, y - 1.8f, 1.4f, 1.4f);
+
+            const juce::String label = formatSpectrumPeakFrequency (marker.frequencyHz);
+            constexpr float labelW = 44.0f;
+            constexpr float labelH = 14.0f;
+            float labelX = juce::jlimit ((float) plotBounds.getX(),
+                                         (float) plotBounds.getRight() - labelW,
+                                         x - labelW * 0.5f);
+            float labelY = y - 22.0f;
+
+            if (labelY < (float) plotBounds.getY() + 2.0f)
+                labelY = y + 8.0f;
+
+            if (labelY + labelH > (float) plotBounds.getBottom())
+                labelY = (float) plotBounds.getBottom() - labelH;
+
+            juce::Rectangle<float> labelRect (labelX, labelY, labelW, labelH);
+            g.setColour (themeColors.panelElevated.withAlpha ((isDark ? 0.52f : 0.42f) * alpha));
+            g.fillRoundedRectangle (labelRect, 5.0f);
+
+            g.setColour (markerColour.withAlpha ((isDark ? 0.28f : 0.20f) * alpha));
+            g.drawRoundedRectangle (labelRect.reduced (0.5f), 5.0f, 0.65f);
+
+            g.setFont (juce::Font (juce::FontOptions ("Roboto Mono", 8.0f, juce::Font::plain)));
+            g.setColour (themeColors.textPrimary.withAlpha ((isDark ? 0.84f : 0.76f) * alpha));
+            g.drawText (label, labelRect.toNearestInt(), juce::Justification::centred, true);
+        }
+    }
+
+    juce::String EQGraphView::formatSpectrumPeakFrequency (float frequencyHz)
+    {
+        if (frequencyHz < 1000.0f)
+            return juce::String (juce::roundToInt (frequencyHz)) + " Hz";
+
+        return juce::String (frequencyHz / 1000.0f, frequencyHz < 10000.0f ? 1 : 0) + " kHz";
     }
 
     void EQGraphView::resized()

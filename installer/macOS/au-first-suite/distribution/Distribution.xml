@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>ASTRA Audio Suite</title>
+
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+
+    <background file="background.png" alignment="bottomleft" scaling="none"/>
+    <welcome file="welcome.html"/>
+    <license file="license.html"/>
+    <readme file="README.txt"/>
+
+    <pkg-ref id="br.com.sidyfurtado.astra-suite.au"/>
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="br.com.sidyfurtado.astra-suite.au"/>
+        </line>
+    </choices-outline>
+
+    <choice id="default" title="ASTRA Audio Suite" description="Audio Unit plug-ins for macOS"/>
+
+    <choice id="br.com.sidyfurtado.astra-suite.au" title="ASTRA Audio Suite Audio Units" description="Installs AUREQ, LUMINAR, and GRAVITY Audio Units to /Library/Audio/Plug-Ins/Components" visible="false" required="true">
+        <pkg-ref id="br.com.sidyfurtado.astra-suite.au"/>
+    </choice>
+
+    <pkg-ref id="br.com.sidyfurtado.astra-suite.au" version="0.9.0" onConclusion="none">ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU-component.pkg</pkg-ref>
+</installer-gui-script>

@@ -18,7 +18,7 @@ if(TARGET juce::juce_audio_processors)
         # Identificador exclusivo do plugin (4 caracteres)
         PLUGIN_CODE Aurq
         # Código do fabricante (4 caracteres)
-        MANUFACTURER_CODE AStr
+        PLUGIN_MANUFACTURER_CODE AStr
         # Categorias de efeito
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE

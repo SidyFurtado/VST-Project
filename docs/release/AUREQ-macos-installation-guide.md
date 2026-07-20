@@ -1,245 +1,121 @@
-# AUREQ — Guia de Instalação Manual — macOS
+# ASTRA Audio Suite — Guia de Instalação macOS (AU-First)
 
 **Versão**: 0.9.0-rc1  
-**Plataforma**: macOS 10.13 High Sierra ou superior
+**Plataforma**: macOS 10.15 Catalina ou superior  
+**Formato Principal**: Audio Unit (AU)
 
 ---
 
 > [!WARNING]
-> Este é um Release Candidate não assinado e não notarizado.
-> O macOS Gatekeeper pode exibir um aviso de segurança ao abrir o aplicativo pela primeira vez.
-> Veja a seção [Aviso do Gatekeeper](#aviso-do-gatekeeper) para instruções.
+> Este é um Release Candidate de beta privada não assinado e não notarizado.
+> O macOS Gatekeeper exibirá um aviso de segurança ao abrir o instalador.
+> Veja a seção [Aviso do Gatekeeper](#aviso-do-gatekeeper) para instruções de contorno.
 
 ---
 
 ## Pré-requisitos
 
-- macOS 10.13 High Sierra ou superior (recomendado: macOS 12 Monterey+)
-- Para uso do VST3: uma DAW compatível com o formato VST3 instalada
-  - Reaper, Ableton Live, Bitwig Studio, Cakewalk, Studio One, etc.
-- Para uso do Standalone: nenhuma DAW necessária
+- macOS 10.15 Catalina ou superior (compatível com Intel e Apple Silicon nativo)
+- DAW compatível com o formato Audio Unit (AU):
+  - Logic Pro, GarageBand, Final Cut, Ableton Live, FL Studio macOS, Reaper, etc.
 
 ---
 
-## 1. Instalação do Plugin VST3
+## 1. Instalação Automática da Suite (Recomendado)
 
-O arquivo do plugin é `AUREQ.vst3` (um bundle — pasta com estrutura interna).
-
-> [!IMPORTANT]
-> **Instalador Automático (Fase 15.2B)**: O instalador `.pkg` plugin-only instala o VST3 exclusivamente no nível do sistema (`/Library/Audio/Plug-Ins/VST3/AUREQ.vst3`) para garantir máxima compatibilidade com todas as DAWs (Ableton Live, Logic Pro, Reaper, etc.). Instalações customizadas de caminho de plugin não são permitidas no instalador.
-
-### Opção recomendada — DMG visual plugin-only
-
-Abra o arquivo:
+O pacote oficial da suite de plugins é o instalador unificado:
 
 ```text
-AUREQ-0.9.0-rc1-macOS-plugin-only.dmg
+https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg
 ```
 
-Depois, clique duas vezes em:
+Este instalador coloca as Audio Units dos três plugins ativos no nível global do sistema:
 
 ```text
-AUREQ Installer.pkg
+/Library/Audio/Plug-Ins/Components/AUREQ.component
+/Library/Audio/Plug-Ins/Components/LUMINAR.component
+/Library/Audio/Plug-Ins/Components/GRAVITY.component
 ```
 
-O DMG e apenas a embalagem visual de distribuicao. O PKG dentro dele continua sendo o instalador real e coloca o VST3 em:
-
-```text
-/Library/Audio/Plug-Ins/VST3/AUREQ.vst3
-```
-
-> [!NOTE]
-> Este RC ainda nao esta assinado nem notarizado. O macOS pode avisar que o instalador nao e de um desenvolvedor identificado.
-
-### Opção Terminal — Instalador PKG plugin-only
-
-```bash
-sudo installer -pkg "AUREQ-0.9.0-rc1-macOS-plugin-only.pkg" -target /
-```
-
-Verificar instalação:
-
-```bash
-ls -ld "/Library/Audio/Plug-Ins/VST3/AUREQ.vst3"
-pkgutil --pkg-info br.com.sidyfurtado.aureq.vst3
-pkgutil --files br.com.sidyfurtado.aureq.vst3
-```
-
-### Opção A — Instalação manual para todos os usuários do sistema
-
-```bash
-sudo cp -r AUREQ.vst3 /Library/Audio/Plug-Ins/VST3/
-```
-
-> Requer senha de administrador. Todos os usuários da máquina terão acesso ao plugin.
-
-### Opção B — Instalação apenas para o usuário atual (recomendada)
-
-```bash
-cp -r AUREQ.vst3 ~/Library/Audio/Plug-Ins/VST3/
-```
-
-> Não requer senha. O plugin fica disponível apenas para o usuário atual.  
-> A pasta `~/Library/Audio/Plug-Ins/VST3/` será criada automaticamente se não existir.
-
-### Verificar instalação
-
-Após copiar, confirme que o arquivo está no lugar:
-
-```bash
-ls ~/Library/Audio/Plug-Ins/VST3/ | grep AUREQ
-```
-
-Saída esperada:
-```
-AUREQ.vst3
-```
-
-### Escanear o plugin na DAW
-
-Abra sua DAW e force um scan de plugins:
-- **FL Studio macOS**: `Plugin Manager > Find installed plugins`
-  - Confirme que `/Library/Audio/Plug-Ins/VST3` esta habilitado.
-  - Use `Rescan previously verified plugins` e `Verify plugins` se o AUREQ nao aparecer ou aparecer duplicado.
-  - Se aparecer `AUREQ_2` sem duplicata fisica no Finder/Terminal, trate primeiro como possivel cache interno da DAW.
-- **Reaper**: `Options > Preferences > Plug-ins > VST > Re-scan`
-- **Ableton**: `Preferences > Plug-Ins > Rescan`
-- **Bitwig**: `Settings > Plug-ins > Rescan Plug-ins`
-
-O AUREQ deverá aparecer como **"AUREQ"** fabricado por **"ASTRA Audio"**.
-
-> [!NOTE]
-> Logic Pro nao carrega VST3 nativamente. A validacao em Logic deve ser tratada em fase futura via AU ou wrapper, nao como falha do VST3.
+### Passos:
+1. Clique duas vezes em `ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg` (consulte a seção do Gatekeeper se aparecer aviso de segurança).
+2. Siga as instruções do assistente de instalação da ASTRA Audio.
+3. Insira sua senha de administrador quando solicitado.
+4. Abra sua DAW e force o escaneamento/validação das Audio Units.
 
 ---
 
-## 2. Instalação do Standalone
+## 2. Limpeza Preventiva de Duplicatas e Atualização do Cache
 
-O arquivo é `AUREQ.app` (aplicativo macOS nativo).
+Se você testou versões beta antigas dos plugins que usavam o código de fabricante temporário `Manu` (em vez do código definitivo `AStr`), você deve executar a limpeza abaixo para evitar conflitos de cache na DAW:
 
-### Opção A — Instalação global
-
-Arraste `AUREQ.app` para `/Applications/`:
-
+### Passo 1 — Remover duplicatas de usuário:
+No Terminal, execute:
 ```bash
-cp -r AUREQ.app /Applications/
+rm -rf ~/Library/Audio/Plug-Ins/Components/AUREQ.component
+rm -rf ~/Library/Audio/Plug-Ins/Components/LUMINAR.component
+rm -rf ~/Library/Audio/Plug-Ins/Components/GRAVITY.component
 ```
 
-### Opção B — Instalação para o usuário atual
-
+### Passo 2 — Limpar o cache de Audio Units do macOS:
+Para forçar o macOS a escanear a assinatura `AStr` correta, delete o cache do sistema e reinicie o serviço de registro:
 ```bash
-cp -r AUREQ.app ~/Applications/
-```
-
-> Se a pasta `~/Applications/` não existir, crie-a:
-> ```bash
-> mkdir -p ~/Applications/
-> ```
-
-### Abrir o Standalone
-
-```bash
-open /Applications/AUREQ.app
-```
-
-Ou simplesmente clique duas vezes no ícone no Finder.
-
----
-
-## 3. Aviso do Gatekeeper
-
-Como este RC não está assinado nem notarizado, o macOS pode exibir:
-
-> *"AUREQ.app" não pode ser aberto porque é de um desenvolvedor não identificado.*
-
-### Como contornar (apenas para este RC interno)
-
-**Método 1 — Clique com o botão direito:**
-1. Clique com o botão direito (ou Ctrl+clique) em `AUREQ.app`
-2. Selecione **Abrir**
-3. Clique **Abrir** na caixa de diálogo de segurança
-
-**Método 2 — Preferências do sistema:**
-1. Abra **Preferências do Sistema > Segurança e Privacidade**
-2. Na aba **Geral**, clique em **"Abrir mesmo assim"** ao lado da mensagem sobre AUREQ
-
-**Método 3 — Terminal (remover quarentena):**
-```bash
-xattr -dr com.apple.quarantine /Applications/AUREQ.app
-```
-
-> [!IMPORTANT]
-> `xattr` e apenas um workaround local para beta/RC interno. Nao e solucao de produto final.
-> A release publica deve usar Apple Developer ID, assinatura e notarizacao para remover alertas do Gatekeeper.
-
----
-
-## 4. Localização dos User Presets
-
-Os presets de usuário são salvos em:
-
-```
-~/Library/Application Support/AUREQ/Presets/
-```
-
-Extensão: `.aureqpreset` (XML APVTS)
-
-Para revelar a pasta no Finder, dentro do Standalone ou plugin:
-- Abra o preset browser
-- Selecione `User Presets > Reveal Presets Folder`
-
----
-
-## 5. Desinstalação Manual
-
-### Remover o VST3
-
-```bash
-rm -rf ~/Library/Audio/Plug-Ins/VST3/AUREQ.vst3
-# ou, se instalado globalmente:
-sudo rm -rf /Library/Audio/Plug-Ins/VST3/AUREQ.vst3
-```
-
-Se instalado via PKG plugin-only, remover tambem o recibo do instalador:
-
-```bash
-sudo pkgutil --forget br.com.sidyfurtado.aureq.vst3
-```
-
-### Remover o Standalone
-
-```bash
-rm -rf /Applications/AUREQ.app
-# ou, se instalado no diretório do usuário:
-rm -rf ~/Applications/AUREQ.app
-```
-
-### Remover preferências e user presets (opcional)
-
-```bash
-# User presets
-rm -rf ~/Library/Application\ Support/AUREQ/
-
-# Preferências de idioma (PropertiesFile JUCE)
-rm -f ~/Library/Preferences/br.com.sidyfurtado.aureq.settings
+rm -f ~/Library/Caches/AudioUnitCache/com.apple.audiounits.cache
+killall -9 AudioComponentRegistrar
 ```
 
 ---
 
-## 6. Solução de Problemas
+## 3. Aviso do Gatekeeper (Instalador Unsigned)
 
-| Problema | Solução |
-|----------|---------|
-| Plugin não aparece na DAW | Force rescan na DAW; confirme que o `.vst3` está em `~/Library/Audio/Plug-Ins/VST3/` |
-| "Developer not identified" | Use clique direito > Abrir ou remova quarentena com `xattr` |
-| Standalone não abre | Verifique macOS 10.13+; tente abrir pelo Terminal com `open AUREQ.app` |
-| User presets não aparecem | Use `Refresh User Presets` no preset browser |
-| Acentos incorretos na UI | Não esperado neste RC; reportar ao desenvolvedor |
+Como este pacote de beta privada não é assinado digitalmente, o macOS impedirá a abertura direta mostrando o aviso:
+> *"ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" não pode ser aberto porque é de um desenvolvedor não identificado.*
+
+### Como abrir:
+1. Pressione **Control** e clique (ou clique com o botão direito) no arquivo `.pkg`.
+2. Escolha **Abrir** no menu contextual.
+3. Clique em **Abrir** (ou Abrir Mesmo Assim) na caixa de diálogo de aviso do macOS.
+4. O instalador iniciará normalmente.
 
 ---
 
-## 7. Suporte
+## 4. Escanear o plugin na DAW
 
-- **Fabricante**: ASTRA Audio
-- **Plugin**: AUREQ v0.9.0-rc1
-- **Bundle ID**: `br.com.sidyfurtado.aureq`
+### Logic Pro
+* O Logic Pro valida os componentes automaticamente na inicialização.
+* Se os plugins não aparecerem, acesse: `Logic Pro > Definições > Gestor de Plugins` (Preferences > Plug-in Manager).
+* Localize os plugins da **ASTRA Audio** (fabricante `AStr`).
+* Selecione os plugins e clique em **Reset & Rescan Selection** (Redefinir e Escanear Novamente a Seleção).
+
+### Ableton Live macOS
+* Vá em `Preferences > Plug-Ins`.
+* Certifique-se de que a opção **"Use Audio Units"** (Usar Audio Units) está ativada.
+* Se necessário, clique em **Rescan** (Re-escanear).
+
+### FL Studio macOS
+* Vá em `Options > Manage plugins`.
+* Clique em **Find installed plugins** (Localizar plugins instalados).
+* Certifique-se de que a opção **"Verify plugins"** está marcada para que o FL Studio reconheça o formato AU corretamente.
+
+---
+
+## 5. Formatos Legados (VST3 / Standalone)
+
+* **macOS VST3:** O formato VST3 no macOS é mantido apenas como ferramenta de compatibilidade de desenvolvimento/QA. Não está incluído na distribuição pública da suite.
+* **macOS Standalone:** Os aplicativos Standalone são binários internos de depuração. Não devem ser usados para mixagem/produção de áudio geral.
+
+---
+
+## 6. Desinstalação Completa
+
+Para remover a suite de Audio Units do sistema e limpar o registro do instalador, execute os seguintes comandos no Terminal:
+
+```bash
+# Remover os plugins
+sudo rm -rf /Library/Audio/Plug-Ins/Components/AUREQ.component
+sudo rm -rf /Library/Audio/Plug-Ins/Components/LUMINAR.component
+sudo rm -rf /Library/Audio/Plug-Ins/Components/GRAVITY.component
+
+# Esquecer o registro do recibo da instalação
+sudo pkgutil --forget br.com.sidyfurtado.astra-suite.au
+```
