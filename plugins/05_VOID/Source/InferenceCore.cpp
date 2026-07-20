@@ -225,12 +225,13 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
         resetResamplers (hostRate);
         
         // Log ONNX Model topology details
-        juce::Logger::writeToLog ("\n========================================================");
-        juce::Logger::writeToLog ("[VOID] ONNX Model Loaded Successfully!");
-        juce::Logger::writeToLog ("Path: " + modelPath);
-        juce::Logger::writeToLog ("--------------------------------------------------------");
-        
-        juce::Logger::writeToLog ("INPUTS (" + juce::String (numInputNodes) + "):");
+        juce::String logMsg;
+        logMsg << "\n========================================================\n"
+               << "[VOID] ONNX Model Loaded Successfully!\n"
+               << "Path: " << modelPath << "\n"
+               << "--------------------------------------------------------\n"
+               << "INPUTS (" << juce::String (numInputNodes) << "):\n";
+               
         for (size_t i = 0; i < numInputNodes; ++i)
         {
             auto nodeNameAlloc = session->GetInputNameAllocated (i, allocator);
@@ -240,13 +241,14 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
             auto type = tensorInfo.GetElementType();
             auto shape = tensorInfo.GetShape();
             
-            juce::Logger::writeToLog ("  [" + juce::String (i) + "] Name: \"" + juce::String (name) + 
-                                      "\", Type: " + tensorTypeToString (type) + 
-                                      ", Shape: " + shapeToString (shape));
+            logMsg << "  [" << juce::String (i) << "] Name: \"" << juce::String (name)
+                   << "\", Type: " << tensorTypeToString (type)
+                   << ", Shape: " << shapeToString (shape) << "\n";
         }
         
-        juce::Logger::writeToLog ("--------------------------------------------------------");
-        juce::Logger::writeToLog ("OUTPUTS (" + juce::String (numOutputNodes) + "):");
+        logMsg << "--------------------------------------------------------\n"
+               << "OUTPUTS (" << juce::String (numOutputNodes) << "):\n";
+               
         for (size_t i = 0; i < numOutputNodes; ++i)
         {
             auto nodeNameAlloc = session->GetOutputNameAllocated (i, allocator);
@@ -256,9 +258,9 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
             auto type = tensorInfo.GetElementType();
             auto shape = tensorInfo.GetShape();
             
-            juce::Logger::writeToLog ("  [" + juce::String (i) + "] Name: \"" + juce::String (name) + 
-                                      "\", Type: " + tensorTypeToString (type) + 
-                                      ", Shape: " + shapeToString (shape));
+            logMsg << "  [" << juce::String (i) << "] Name: \"" << juce::String (name)
+                   << "\", Type: " << tensorTypeToString (type)
+                   << ", Shape: " << shapeToString (shape) << "\n";
         }
         
         // Check for hidden states or memory-related inputs
@@ -275,18 +277,25 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
             }
         }
         
-        juce::Logger::writeToLog ("--------------------------------------------------------");
+        logMsg << "--------------------------------------------------------\n";
         if (requiresStates)
         {
-            juce::Logger::writeToLog ("[VOID] Hidden States/Memory detected: YES (Count: " + 
-                                      juce::String (hiddenStateNames.size()) + ")");
-            juce::Logger::writeToLog ("  State names: " + hiddenStateNames.joinIntoString (", "));
+            logMsg << "[VOID] Hidden States/Memory detected: YES (Count: "
+                   << juce::String (hiddenStateNames.size()) << ")\n"
+                   << "  State names: " << hiddenStateNames.joinIntoString (", ") << "\n";
         }
         else
         {
-            juce::Logger::writeToLog ("[VOID] Hidden States/Memory detected: NO");
+            logMsg << "[VOID] Hidden States/Memory detected: NO\n";
         }
-        juce::Logger::writeToLog ("========================================================\n");
+        logMsg << "========================================================\n";
+
+        // Print to standard log
+        juce::Logger::writeToLog (logMsg);
+
+        // Export to file on User's Desktop
+        juce::File desktopFile ("/Users/sidyziin/Desktop/void_onnx_topology.txt");
+        desktopFile.replaceWithText (logMsg);
 
         return true;
     }

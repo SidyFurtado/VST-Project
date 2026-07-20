@@ -169,6 +169,11 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ignoreUnused (midiMessages);
     juce::ScopedNoDenormals noDenormals;
 
+    // Early return: clean bypass if bypass is active OR if no model is loaded.
+    // The original audio buffer passes through 100% untouched.
+    if (bypassParam->load() > 0.5f || !isModelLoaded())
+        return;
+
     const int totalNumInputChannels  = getTotalNumInputChannels();
     const int totalNumOutputChannels = getTotalNumOutputChannels();
     const int numSamples             = buffer.getNumSamples();
