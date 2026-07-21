@@ -183,40 +183,37 @@ void VoidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         dryFifo.write (monoInputBuffer, 0, numSamples);
     }
     
-    // 3. Wake up the inference thread
+    // 3. Wake up the inference thread whenever enough samples are available for an ONNX frame
     signalEvent.signal();
 
-    // 4. Read aligned samples from dryFifo and outputFifo
+    // 4. Read aligned samples from dryFifo and outputFifo with Fallback Underrun Protection
     monoDryBuffer.clear();
     monoOutputBuffer.clear();
 
-    bool dryReady = false;
-    bool wetReady = false;
-
     if (dryFifo.getNumReady() >= numSamples)
-    {
         dryFifo.read (monoDryBuffer, 0, numSamples);
-        dryReady = true;
-    }
 
-    if (outputFifo.getNumReady() >= numSamples)
+    // Read available wet samples (partial pop if queue is warming up or thread is slightly late)
+    const int wetAvailable = outputFifo.getNumReady();
+    const int wetToRead = std::min (numSamples, wetAvailable);
+    if (wetToRead > 0)
     {
-        outputFifo.read (monoOutputBuffer, 0, numSamples);
-        wetReady = true;
+        outputFifo.read (monoOutputBuffer, 0, wetToRead);
     }
 
     auto* dryPtr = monoDryBuffer.getReadPointer (0);
     auto* wetPtr = monoOutputBuffer.getReadPointer (0);
 
-    // 5. Sample-accurate crossfade & upmix to stereo output channels
+    // 5. Sample-accurate crossfade & upmix with per-sample underrun fallback
     for (int ch = 0; ch < totalNumOutputChannels; ++ch)
     {
         auto* channelData = buffer.getWritePointer (ch);
         
         for (int i = 0; i < numSamples; ++i)
         {
-            float dryVal = dryReady ? dryPtr[i] : 0.0f;
-            float wetVal = wetReady ? wetPtr[i] : dryVal; // Fallback to dry if AI queue is warming up
+            float dryVal = dryPtr[i];
+            // Use ready AI wet sample if available; seamlessly fall back to dryVal if underrun occurs
+            float wetVal = (i < wetToRead) ? wetPtr[i] : dryVal;
 
             // Pure linear time-domain crossfade (0% knob = 100% Dry, 100% knob = 100% Wet)
             float outVal = (1.0f - alpha) * dryVal + alpha * wetVal;
