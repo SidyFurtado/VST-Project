@@ -294,7 +294,7 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
         juce::Logger::writeToLog (logMsg);
 
         // Export to file on User's Desktop
-        juce::File desktopFile ("/Users/sidyziin/Desktop/void_onnx_topology.txt");
+        juce::File desktopFile = juce::File::getSpecialLocation (juce::File::userDesktopDirectory).getChildFile ("void_onnx_topology.txt");
         desktopFile.replaceWithText (logMsg);
 
         return true;
@@ -412,99 +412,15 @@ void InferenceCore::applyCrossfade()
 }
 
 // ==============================================================================
-// Inference
+// Inference (HARD PASSTHROUGH FOR DIAGNOSTIC TESTING)
 // ==============================================================================
 
 bool InferenceCore::process()
 {
     juce::ScopedLock sl (sessionLock);
-    
-    if (useDummyPassthrough || session == nullptr)
-    {
-        outputFrame = inputFrame;
-        applyCrossfade();
-        return true;
-    }
-        
-    try
-    {
-        auto memoryInfo = Ort::MemoryInfo::CreateCpu (OrtAllocatorType::OrtArenaAllocator,
-                                                       OrtMemType::OrtMemTypeDefault);
 
-        // --- Build input tensor list ---
-        // Slot 0: primary audio input
-        allInputTensors.clear();
-        allInputNamePtrs.clear();
-
-        allInputTensors.push_back (
-            Ort::Value::CreateTensor<float> (
-                memoryInfo,
-                inputFrame.data(), inputFrame.size(),
-                inputShape.data(), inputShape.size()
-            )
-        );
-        allInputNamePtrs.push_back (inputName.c_str());
-
-        // State input tensors (persistent across frames)
-        for (auto& node : stateNodes)
-        {
-            allInputTensors.push_back (
-                Ort::Value::CreateTensor<float> (
-                    memoryInfo,
-                    node.data.data(), node.data.size(),
-                    node.shape.data(), node.shape.size()
-                )
-            );
-            allInputNamePtrs.push_back (node.inputName.c_str());
-        }
-
-        // --- Build output tensor list ---
-        allOutputTensors.clear();
-        allOutputNamePtrs.clear();
-
-        allOutputTensors.push_back (
-            Ort::Value::CreateTensor<float> (
-                memoryInfo,
-                outputFrame.data(), outputFrame.size(),
-                outputShape.data(), outputShape.size()
-            )
-        );
-        allOutputNamePtrs.push_back (outputName.c_str());
-
-        // State output tensors (write back in-place into node.data)
-        for (auto& node : stateNodes)
-        {
-            allOutputTensors.push_back (
-                Ort::Value::CreateTensor<float> (
-                    memoryInfo,
-                    node.data.data(), node.data.size(),
-                    node.shape.data(), node.shape.size()
-                )
-            );
-            allOutputNamePtrs.push_back (node.outputName.c_str());
-        }
-
-        // --- Execute the neural network ---
-        session->Run (
-            Ort::RunOptions { nullptr },
-            allInputNamePtrs.data(),
-            allInputTensors.data(),
-            allInputTensors.size(),
-            allOutputNamePtrs.data(),
-            allOutputTensors.data(),
-            allOutputTensors.size()
-        );
-
-        // State tensors in stateNodes.data are now updated in-place for the next frame.
-
-        // Apply crossfade at the output boundary
-        applyCrossfade();
-        
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        juce::Logger::writeToLog ("ONNX Process Error: " + juce::String (e.what()));
-        return false;
-    }
+    // Hard Passthrough: copy inputFrame to outputFrame directly without calling session->Run(...)
+    std::copy (inputFrame.begin(), inputFrame.end(), outputFrame.begin());
+    applyCrossfade();
+    return true;
 }
