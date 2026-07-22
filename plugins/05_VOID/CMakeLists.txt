@@ -48,6 +48,8 @@ if(TARGET juce::juce_audio_processors)
         Source/InferenceCore.cpp
         Source/InferenceThread.h
         Source/InferenceThread.cpp
+        Source/SpectralNoiseReducer.h
+        Source/SpectralNoiseReducer.cpp
     )
 
     # ---- Include paths ------------------------------------------------------------
@@ -68,13 +70,26 @@ if(TARGET juce::juce_audio_processors)
     # ---- Otimização de CPU e Vetorização ------------------------------------------
     if(MSVC)
         target_compile_options(VOID PRIVATE /W4)
-        target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:/arch:AVX2>)
+        target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:/arch:AVX2 /O2>)
+        target_link_options(VOID PRIVATE $<$<CONFIG:Release>:/LTCG>)
     else()
         target_compile_options(VOID PRIVATE -Wall -Wextra -Wpedantic)
-        # Habilitar AVX2 apenas em arquitetura x86_64
-        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "amd64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
-            target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:-mavx2>)
+        target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:-O3 -flto=auto -fvisibility=hidden>)
+        target_link_options(VOID PRIVATE $<$<CONFIG:Release>:-flto=auto -fvisibility=hidden>)
+        # SIMD flags por arquitetura (Release only)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+            target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:-mavx2 -mfma>)
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+            # Apple Silicon NEON é ativado por padrão; flags otimizadas p/ pipeline M-series
+            target_compile_options(VOID PRIVATE $<$<CONFIG:Release>:-mcpu=apple-m1>)
         endif()
+    endif()
+
+    # ---- Universal Binary (macOS: x86_64 + arm64) no CMake global -----------------
+    if(APPLE)
+        set_target_properties(VOID PROPERTIES
+            OSX_ARCHITECTURES "arm64;x86_64"
+        )
     endif()
 
     # ---- Cópia Pós-Build da Biblioteca Dinâmica do ONNX Runtime -----------------

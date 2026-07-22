@@ -189,6 +189,16 @@ public:
     // Is resampling needed?
     bool needsResampling() const noexcept { return resamplingEnabled; }
 
+    // Expose current host sample rate so InferenceThread can calculate
+    // how many host-rate input samples are needed per 48kHz frame.
+    double getHostRate() const noexcept { return hostSampleRate; }
+
+    // Reset crossfade state — call on prepareToPlay / transport restart
+    void resetCrossfade();
+
+    // Metering: get the current AI reduction in dB (input vs output RMS)
+    float getAIReductionDb() const noexcept { return currentReductionDb.load(); }
+
     bool useDummyPassthrough { false };
 
 private:
@@ -229,6 +239,16 @@ private:
     std::array<float, CROSSFADE_LEN> prevOutputTail;  // tail of previous outputFrame
     bool firstFrame { true };
 
+    // ---- Reduction Metering -------------------------------------------------------
+    float inputFrameRms  = 0.0f;
+    float outputFrameRms = 0.0f;
+    std::atomic<float> currentReductionDb { 0.0f };
+    float smoothedReductionDb = 0.0f;
+
+    void updateReductionMeter();
+
+    // ---- State Awareness ----------------------------------------------------------
+    bool hasProcessedAnyFrames { false };
     // ---- Resampling -------------------------------------------------------------
     bool resamplingEnabled { false };
     double hostSampleRate  { 48000.0 };
@@ -237,8 +257,9 @@ private:
     juce::LagrangeInterpolator inputResampler;
     juce::LagrangeInterpolator outputResampler;
 
-    // Staging buffers for resampling (static max size)
-    static constexpr int MAX_RESAMPLE_BUFFER = MODEL_FRAME_SIZE * 4;
+    // Staging buffers for resampling.
+    // Must handle up to 192kHz host rate → ratio = 4.0 → need MODEL_FRAME_SIZE * 4 = 1920.
+    static constexpr int MAX_RESAMPLE_BUFFER = MODEL_FRAME_SIZE * 4; // 1920
     std::array<float, MAX_RESAMPLE_BUFFER> resampleInStage;
     std::array<float, MAX_RESAMPLE_BUFFER> resampleOutStage;
 

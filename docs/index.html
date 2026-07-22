@@ -200,6 +200,85 @@
       transform: translateY(-2px);
     }
 
+    /* VOID Theme Customizations */
+    :root {
+      --purple:        #A855F7;
+      --purple-dim:    rgba(168, 85, 247, 0.35);
+      --purple-glow:   rgba(168, 85, 247, 0.15);
+      --border-purple: rgba(168, 85, 247, 0.14);
+      --border-hover-purple: rgba(168, 85, 247, 0.4);
+    }
+    
+    .plugin-card.void-theme {
+      --border: rgba(168, 85, 247, 0.25);
+      --border-hover: rgba(168, 85, 247, 0.5);
+    }
+    .plugin-card.void-theme.available {
+      border-color: var(--border);
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.08), inset 0 1px 0 rgba(168, 85, 247, 0.1);
+    }
+    .plugin-card.void-theme.available:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 60px rgba(168, 85, 247, 0.15), 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .plugin-card.void-theme .plugin-card-glow {
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+    }
+    .plugin-card.void-theme .plugin-name-sub {
+      color: var(--purple);
+    }
+    .plugin-card.void-theme .badge-available {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+    }
+    .plugin-card.void-theme .pulse-dot {
+      background: var(--purple);
+      box-shadow: 0 0 8px var(--purple);
+    }
+    .plugin-card.void-theme .plugin-icon {
+      filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.3));
+    }
+    /* ── Download buttons (card) ── */
+    .btn-dl-mac-void,
+    .btn-dl-win-void {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: var(--transition);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-dl-mac-void {
+      background: var(--purple);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(168,85,247,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      border: none;
+    }
+    .btn-dl-mac-void:hover {
+      background: #c084fc;
+      box-shadow: 0 6px 28px rgba(168,85,247,0.55);
+      transform: translateY(-2px);
+    }
+    .btn-dl-win-void {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1.5px solid rgba(168, 85, 247, 0.35);
+    }
+    .btn-dl-win-void:hover {
+      background: rgba(168, 85, 247, 0.08);
+      border-color: rgba(168, 85, 247, 0.65);
+      transform: translateY(-2px);
+    }
+
     /* Large Buttons Theme Customizations */
     .btn-dl-large-mac-luminar {
       background: var(--amber);
@@ -240,6 +319,38 @@
       border-color: rgba(232, 64, 64, 0.6);
       transform: translateY(-3px);
       box-shadow: 0 0 30px rgba(232, 64, 64, 0.12);
+    }
+
+    .download-box.void-download {
+      border-color: rgba(168, 85, 247, 0.3);
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.06);
+    }
+    .download-box.void-download:hover {
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 50px rgba(168, 85, 247, 0.12);
+    }
+    .btn-dl-large-mac-void {
+      background: linear-gradient(135deg, #A855F7 0%, #9333EA 100%);
+      color: #ffffff;
+      box-shadow: 0 0 50px rgba(168,85,247,0.3), 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .btn-dl-large-mac-void:hover {
+      background: #fff;
+      color: #07060A;
+      box-shadow: 0 0 70px rgba(168,85,247,0.5), 0 12px 40px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .btn-dl-large-win-void {
+      background: rgba(248,250,252,0.07);
+      color: var(--text-primary);
+      border: 1px solid rgba(248,250,252,0.2);
+      backdrop-filter: blur(12px);
+    }
+    .btn-dl-large-win-void:hover {
+      background: rgba(248,250,252,0.13);
+      border-color: rgba(168, 85, 247, 0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.12);
     }
     
     html { scroll-behavior: smooth; }
@@ -896,7 +1007,7 @@
       <div class="plugins-header reveal">
         <p class="section-label">A Coleção</p>
         <h2 class="plugins-title">Ferramentas profissionais para cada etapa.</h2>
-        <p class="plugins-subtitle">Três plugins disponíveis agora. Mais ferramentas de precisão chegando em breve.</p>
+        <p class="plugins-subtitle">Quatro plugins de precisão disponíveis agora para a sua produção.</p>
       </div>
       <div class="plugins-grid">
 
@@ -1074,24 +1185,72 @@
           </div>
         </div>
 
-        <!-- NEBULA SAT -->
-        <div class="plugin-card coming reveal">
-          <h3 class="plugin-name">NEBULA</h3>
-          <p class="plugin-name-sub">Saturador Harmônico</p>
-          <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Em Breve</span>
+        <!-- VOID — DISPONÍVEL -->
+        <div class="plugin-card void-theme available reveal">
+          <div class="plugin-card-glow"></div>
+          <!-- Inline VOID Icon -->
+          <svg class="plugin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="72" height="72" style="margin-bottom: 20px;">
+            <defs>
+              <radialGradient id="void-bg-grad" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="#0B0914" />
+                <stop offset="100%" stop-color="#1E0B36" />
+              </radialGradient>
+              <radialGradient id="void-node-grad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="60%" stop-color="#C084FC" />
+                <stop offset="100%" stop-color="#A855F7" />
+              </radialGradient>
+              <radialGradient id="void-node-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(168, 85, 247, 0.6)" />
+                <stop offset="100%" stop-color="rgba(168, 85, 247, 0)" />
+              </radialGradient>
+              <radialGradient id="void-aurora-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(168, 85, 247, 0.25)" />
+                <stop offset="100%" stop-color="rgba(168, 85, 247, 0)" />
+              </radialGradient>
+              <filter id="void-glass-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+              </filter>
+            </defs>
+            <rect x="0" y="0" width="1024" height="1024" rx="230" fill="url(#void-bg-grad)" />
+            <ellipse cx="512" cy="512" rx="380" ry="380" fill="url(#void-aurora-grad)" />
+            <circle cx="512" cy="512" r="300" fill="none" stroke="rgba(168, 85, 247, 0.2)" stroke-width="16" stroke-dasharray="20 10" />
+            <path d="M 160,512 C 300,512 360,250 512,250 C 664,250 724,512 864,512" fill="none" stroke="#C084FC" stroke-width="24" stroke-linecap="round" filter="url(#void-glass-shadow)" />
+            <circle cx="512" cy="250" r="140" fill="url(#void-node-glow)" />
+            <circle cx="512" cy="250" r="48" fill="url(#void-node-grad)" filter="url(#void-glass-shadow)" />
+          </svg>
+          <div class="plugin-badge">
+            <span class="badge badge-available"><span class="pulse-dot"></span> Disponível Agora</span>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Adicione calor e caráter analógico. Modos de saturação tape, tubo e transistor com controle por banda.</p>
-        </div>
-
-        <!-- EVENT LIMITER -->
-        <div class="plugin-card coming reveal">
-          <h3 class="plugin-name">EVENT</h3>
-          <p class="plugin-name-sub">Limiter de Masterização</p>
-          <div class="plugin-badge" style="margin-top:8px;">
-            <span class="badge badge-coming">Em Breve</span>
+          <h3 class="plugin-name">VOID</h3>
+          <p class="plugin-name-sub">Isolador de Voz & Redutor de Ruído IA</p>
+          <!-- Curva de Remoção de Ruído animada -->
+          <svg class="eq-curve-animated" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:40px;margin-bottom:16px;">
+            <path d="M4,15 C40,15 70,50 120,50 C170,50 200,15 236,15" stroke="#A855F7" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="120" cy="50" r="4" fill="#A855F7" filter="url(#glow-purple)"/>
+            <defs>
+              <filter id="glow-purple" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+          <p class="plugin-desc">Processador espectral de isolamento de voz e remoção de ruído via IA com motor ONNX em tempo real, preservação de transientes e controle de resíduo.</p>
+          <div class="plugin-download-buttons">
+            <a id="card-btn-mac-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID_macOS_Installer.pkg" class="btn-dl-mac-void">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              macOS (Audio Unit / VST3)
+            </a>
+            <a id="card-btn-win-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID-1.0.0-Windows-Setup.exe" class="btn-dl-win-void">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+              Windows — .exe
+            </a>
           </div>
-          <p class="plugin-desc" style="margin-top:16px;">Limiting transparente para sessões de masterização. Algoritmo lookahead previne inter-sample peaks sem artefatos.</p>
+          <div class="plugin-specs">
+            <div class="spec-item"><strong>Formato</strong>AU (Mac) &middot; VST3 (Win/Mac)</div>
+            <div class="spec-item"><strong>Status</strong>Beta privado</div>
+            <div class="spec-item"><strong>Motor</strong>ONNX Neural DSP</div>
+          </div>
         </div>
 
       </div>
@@ -1166,6 +1325,28 @@
                 </div>
               </a>
               <a id="dl-btn-win-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-gravity">
+                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
+                <div class="dl-info">
+                  <span>Windows .exe</span>
+                  <small>10+ 64-bit &middot; VST3 (Recomendado)</small>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- VOID Download Box -->
+          <div class="download-box void-download">
+            <h3 class="download-box-title">VOID AI Noise Suppressor</h3>
+            <p class="download-box-desc">Isolador espectral de voz e limpador de ruído ambiente com aceleração neural ONNX.</p>
+            <div class="download-box-actions">
+              <a id="dl-btn-mac-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID_macOS_Installer.pkg" class="btn-dl-large btn-dl-large-mac-void">
+                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></span>
+                <div class="dl-info">
+                  <span>macOS (Audio Unit / VST3)</span>
+                  <small>10.15+ &middot; Universal Binary &middot; Silicon/Intel</small>
+                </div>
+              </a>
+              <a id="dl-btn-win-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-void">
                 <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
                 <div class="dl-info">
                   <span>Windows .exe</span>

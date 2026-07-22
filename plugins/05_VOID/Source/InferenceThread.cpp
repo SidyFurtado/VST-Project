@@ -25,14 +25,24 @@ void InferenceThread::prepare()
 
 void InferenceThread::run()
 {
-    // Staging buffer for resampled host-rate output from InferenceCore
-    static constexpr int OUT_STAGE_SIZE = InferenceCore::MODEL_FRAME_SIZE * 4;
+    // Staging buffer for resampled host-rate output from InferenceCore.
+    // Must be large enough to hold output at any sample rate up to 192kHz.
+    // At 192kHz: 480 model samples → ceil(480 / (48000/192000)) = ceil(480 / 0.25) = 1920 host samples.
+    static constexpr int OUT_STAGE_SIZE = InferenceCore::MODEL_FRAME_SIZE * 4; // 1920
     std::array<float, OUT_STAGE_SIZE> outStage;
     outStage.fill (0.0f);
 
+    // Staging buffer for input resampling (host → 48kHz).
+    // At 192kHz: 1920 host samples → 480 model samples.
+    static constexpr int IN_STAGE_SIZE = InferenceCore::MODEL_FRAME_SIZE * 4; // 1920
+    std::array<float, IN_STAGE_SIZE> inStage;
+    inStage.fill (0.0f);
+
     while (!threadShouldExit())
     {
-        // 1. Wait for signal from audio thread (10ms timeout)
+        // 1. Wait for signal from audio thread with AutoReset event.
+        //    After wait returns, reset the event so the next wait() actually
+        //    blocks instead of spinning at 100% CPU (ManualReset default bug).
         signalEvent.wait (10);
 
         if (threadShouldExit())
@@ -45,47 +55,56 @@ void InferenceThread::run()
                 break;
 
             bool success = false;
+            int outSamples = InferenceCore::MODEL_FRAME_SIZE;
 
             if (inferenceCore.isModelLoaded())
             {
-                // 3a. If the host sample rate differs from 48kHz, resample into inputFrame
                 if (inferenceCore.needsResampling())
                 {
-                    // Read raw samples into a temporary buffer
-                    std::array<float, InferenceCore::MODEL_FRAME_SIZE> srcBuffer;
-                    srcBuffer.fill (0.0f);
-                    float* srcPtr = srcBuffer.data();
-                    inputFifo.read (&srcPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
+                    // ---- Resampling path (host rate ≠ 48kHz) ----
+                    // Calculate how many host-rate input samples we need to produce
+                    // one 48kHz output frame of MODEL_FRAME_SIZE samples.
+                    const double hostToModelRatio = inferenceCore.getHostRate() / InferenceCore::MODEL_SAMPLE_RATE;
+                    const int inputSamplesNeeded = static_cast<int> (std::ceil (hostToModelRatio * (double) InferenceCore::MODEL_FRAME_SIZE));
 
-                    // Resample host-rate -> 48kHz into inferenceCore.inputFrame
-                    inferenceCore.resampleToModelRate (srcBuffer.data(), InferenceCore::MODEL_FRAME_SIZE);
+                    // Read host-rate samples from the input FIFO into the staging buffer
+                    inStage.fill (0.0f);
+                    float* inPtr = inStage.data();
+                    inputFifo.read (&inPtr, 1, inputSamplesNeeded);
+
+                    // Resample host-rate samples → 48kHz into inferenceCore.inputFrame
+                    inferenceCore.resampleToModelRate (inStage.data(), inputSamplesNeeded);
                 }
                 else
                 {
-                    // 3b. Read samples directly into the inference backing store (zero-copy path)
+                    // ---- Direct path (host rate == 48kHz) ----
+                    // Zero-copy: read directly into the inference backing store
                     float* inputPtr = inferenceCore.inputFrame.data();
                     inputFifo.read (&inputPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
                 }
 
-                // 4. Run neural inference (also applies crossfade internally)
+                // 3. Run neural inference (also applies crossfade internally via process())
                 success = inferenceCore.process();
             }
             else
             {
-                // No model: drain queue and pass through
+                // No model loaded: drain queue and pass through
                 float* inputPtr = inferenceCore.inputFrame.data();
                 inputFifo.read (&inputPtr, 1, InferenceCore::MODEL_FRAME_SIZE);
                 juce::FloatVectorOperations::copy (inferenceCore.outputFrame.data(),
                                                    inferenceCore.inputFrame.data(),
                                                    InferenceCore::MODEL_FRAME_SIZE);
+                success = true;
             }
 
-            // 5. Determine the number of host-rate output samples to push
-            int outSamples = InferenceCore::MODEL_FRAME_SIZE;
+            if (!success)
+                continue;
 
-            if (success && inferenceCore.needsResampling())
+            // 4. Determine the number of host-rate output samples to push
+            if (inferenceCore.needsResampling())
             {
-                // Resample 48kHz output -> host rate
+                // Resample 48kHz output → host rate
+                // The resampleToHostRate now clamps internally to prevent buffer overflow
                 outSamples = inferenceCore.resampleToHostRate (outStage.data(), OUT_STAGE_SIZE);
 
                 if (outSamples > 0 && outputFifo.getFreeSpace() >= outSamples)

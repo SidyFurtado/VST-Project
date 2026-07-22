@@ -48,9 +48,7 @@ static juce::String shapeToString (const std::vector<int64_t>& shape)
 InferenceCore::InferenceCore()
     : env (ORT_LOGGING_LEVEL_WARNING, "VoidInference")
 {
-    inputFrame.fill (0.0f);
-    outputFrame.fill (0.0f);
-    prevOutputTail.fill (0.0f);
+    resetCrossfade();
     resampleInStage.fill (0.0f);
     resampleOutStage.fill (0.0f);
 }
@@ -218,8 +216,7 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
         loadedModelPath = modelPath;
 
         // Reset crossfade history
-        prevOutputTail.fill (0.0f);
-        firstFrame = true;
+        resetCrossfade();
 
         // Set up resampling
         resetResamplers (hostRate);
@@ -293,10 +290,6 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
         // Print to standard log
         juce::Logger::writeToLog (logMsg);
 
-        // Export to file on User's Desktop
-        juce::File desktopFile = juce::File::getSpecialLocation (juce::File::userDesktopDirectory).getChildFile ("void_onnx_topology.txt");
-        desktopFile.replaceWithText (logMsg);
-
         return true;
     }
     catch (const std::exception& e)
@@ -307,9 +300,21 @@ bool InferenceCore::loadModel (const juce::String& modelPath, double hostRate)
     }
 }
 
+void InferenceCore::resetCrossfade()
+{
+    prevOutputTail.fill (0.0f);
+    firstFrame = true;
+    hasProcessedAnyFrames = false;
+    currentReductionDb.store (0.0f);
+    smoothedReductionDb = 0.0f;
+}
+
 void InferenceCore::unloadModel()
 {
-    // Note: called with sessionLock already held from loadModel, or standalone
+    // Always acquire the session lock to prevent data races with process()
+    // which is called concurrently from the inference thread.
+    juce::ScopedLock sl (sessionLock);
+
     session.reset();
     inputName.clear();
     outputName.clear();
@@ -323,8 +328,7 @@ void InferenceCore::unloadModel()
     allOutputTensors.clear();
     allInputNamePtrs.clear();
     allOutputNamePtrs.clear();
-    firstFrame = true;
-    prevOutputTail.fill (0.0f);
+    resetCrossfade();
 }
 
 bool InferenceCore::isModelLoaded() const noexcept
@@ -362,7 +366,15 @@ int InferenceCore::resampleToModelRate (const float* src, int numSrcSamples)
 
     // speed ratio: how many host samples per model sample
     const double ratio = hostSampleRate / MODEL_SAMPLE_RATE;
-    const int produced = inputResampler.process (ratio, src, inputFrame.data(), MODEL_FRAME_SIZE);
+
+    // CRITICAL FIX: clamp numOut so the resampler doesn't read past
+    // the end of src (which has numSrcSamples elements).
+    // The resampler reads ceil(numOut * ratio) input samples.
+    // We limit: numOut <= floor(numSrcSamples / ratio)
+    const int safeNumOut = static_cast<int> (std::floor ((double) numSrcSamples / ratio + 1e-9));
+    const int clampedOut = std::min (MODEL_FRAME_SIZE, safeNumOut);
+
+    const int produced = inputResampler.process (ratio, src, inputFrame.data(), clampedOut);
     return produced;
 }
 
@@ -377,7 +389,17 @@ int InferenceCore::resampleToHostRate (float* dest, int maxDestSamples)
 
     // speed ratio: model samples per host sample
     const double ratio = MODEL_SAMPLE_RATE / hostSampleRate;
-    const int produced = outputResampler.process (ratio, outputFrame.data(), dest, maxDestSamples);
+
+    // CRITICAL FIX: clamp maxDestSamples so the resampler doesn't read past
+    // the end of outputFrame (which has MODEL_FRAME_SIZE elements).
+    // At 96kHz (ratio=0.5): process(0.5, ... , 1920) would read 960 from outputFrame (OOB!).
+    // We limit to: ceil(MODEL_FRAME_SIZE / ratio) with a small epsilon to guard
+    // against floating-point imprecision (e.g., 480 / (48000/44100) might give
+    // 441.0000001 instead of exactly 441, and ceil would wrongly give 442).
+    const int safeMaxOut = static_cast<int> (std::ceil ((double) MODEL_FRAME_SIZE / ratio - 1e-9));
+    const int clampedDest = std::min (maxDestSamples, safeMaxOut);
+
+    const int produced = outputResampler.process (ratio, outputFrame.data(), dest, clampedDest);
     return produced;
 }
 
@@ -412,6 +434,35 @@ void InferenceCore::applyCrossfade()
 }
 
 // ==============================================================================
+// Reduction Metering
+// ==============================================================================
+
+void InferenceCore::updateReductionMeter()
+{
+    // Compute RMS of input frame
+    float inSumSq = 0.0f;
+    for (int i = 0; i < MODEL_FRAME_SIZE; ++i)
+        inSumSq += inputFrame[i] * inputFrame[i];
+    inputFrameRms = std::sqrt (inSumSq / MODEL_FRAME_SIZE);
+
+    // Compute RMS of output frame
+    float outSumSq = 0.0f;
+    for (int i = 0; i < MODEL_FRAME_SIZE; ++i)
+        outSumSq += outputFrame[i] * outputFrame[i];
+    outputFrameRms = std::sqrt (outSumSq / MODEL_FRAME_SIZE);
+
+    // Compute reduction in dB
+    float inDb  = 20.0f * std::log10 (std::max (inputFrameRms, 1e-8f));
+    float outDb = 20.0f * std::log10 (std::max (outputFrameRms, 1e-8f));
+    float reduction = inDb - outDb;
+
+    // Smooth for metering
+    const float meterSmooth = 0.3f;
+    smoothedReductionDb = (1.0f - meterSmooth) * smoothedReductionDb + meterSmooth * std::max (0.0f, reduction);
+    currentReductionDb.store (smoothedReductionDb);
+}
+
+// ==============================================================================
 // Inference
 // ==============================================================================
 
@@ -419,10 +470,19 @@ bool InferenceCore::process()
 {
     juce::ScopedLock sl (sessionLock);
     
-    if (useDummyPassthrough || session == nullptr)
+    if (session == nullptr)
     {
         outputFrame = inputFrame;
         applyCrossfade();
+        return true;
+    }
+
+    if (useDummyPassthrough)
+    {
+        outputFrame = inputFrame;
+        applyCrossfade();
+        updateReductionMeter();
+        hasProcessedAnyFrames = true;
         return true;
     }
         
@@ -499,6 +559,10 @@ bool InferenceCore::process()
 
         // Apply crossfade at the output boundary
         applyCrossfade();
+
+        // Update reduction metering
+        updateReductionMeter();
+        hasProcessedAnyFrames = true;
         
         return true;
     }
