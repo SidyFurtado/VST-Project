@@ -778,32 +778,42 @@
     .download-box-actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
     .download-buttons { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
     .btn-dl-large {
-      display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       width: 100%;
-      min-height: 58px;
-      padding: 11px 14px;
-      border-radius: 16px;
-      font-size: 14px; font-weight: 750; line-height: 1.2;
-      transition: var(--transition); cursor: pointer; border: 1px solid transparent;
+      padding: 13px 20px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: var(--transition);
+      cursor: pointer;
+      border: 1px solid transparent;
       text-decoration: none;
+      white-space: nowrap;
     }
-    .btn-dl-large-mac { background: var(--cyan); color: #04111C; box-shadow: 0 10px 28px rgba(34,211,238,0.24); }
-    .btn-dl-large-mac:hover { background: #6ef0ff; box-shadow: 0 14px 34px rgba(34,211,238,0.32); transform: translateY(-2px); }
-    .btn-dl-large-mac-luminar { background: var(--amber); color: #07060A; box-shadow: 0 10px 28px rgba(246,201,14,0.22); }
-    .btn-dl-large-mac-luminar:hover { background: #ffd94d; box-shadow: 0 14px 34px rgba(246,201,14,0.32); transform: translateY(-2px); }
-    .btn-dl-large-mac-gravity { background: var(--crimson); color: #ffffff; box-shadow: 0 10px 28px rgba(232,64,64,0.24); }
-    .btn-dl-large-mac-gravity:hover { background: #ff5c5c; color: #ffffff; box-shadow: 0 14px 34px rgba(232,64,64,0.34); transform: translateY(-2px); }
+    .btn-dl-large-mac { background: var(--cyan); color: #04111C; box-shadow: 0 4px 20px rgba(34,211,238,0.35), 0 1px 0 rgba(255,255,255,0.15) inset; }
+    .btn-dl-large-mac:hover { background: #6ef0ff; box-shadow: 0 6px 28px rgba(34,211,238,0.55); transform: translateY(-2px); }
+    .btn-dl-large-mac-luminar { background: var(--amber); color: #07060A; box-shadow: 0 4px 20px rgba(246,201,14,0.35), 0 1px 0 rgba(255,255,255,0.15) inset; }
+    .btn-dl-large-mac-luminar:hover { background: #ffd94d; box-shadow: 0 6px 28px rgba(246,201,14,0.55); transform: translateY(-2px); }
+    .btn-dl-large-mac-gravity { background: var(--crimson); color: #ffffff; box-shadow: 0 4px 20px rgba(232,64,64,0.35), 0 1px 0 rgba(255,255,255,0.15) inset; }
+    .btn-dl-large-mac-gravity:hover { background: #ff5c5c; color: #ffffff; box-shadow: 0 6px 28px rgba(232,64,64,0.55); transform: translateY(-2px); }
     .btn-dl-large-win,
     .btn-dl-large-win-luminar,
     .btn-dl-large-win-gravity {
-      background: rgba(248,250,252,0.06);
+      background: transparent;
       color: var(--text-primary);
-      border-color: rgba(248,250,252,0.14);
-      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(248,250,252,0.25);
     }
-    .btn-dl-large-win:hover { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.42); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(34,211,238,0.12); }
-    .btn-dl-large-win-luminar:hover { background: rgba(246,201,14,0.09); border-color: rgba(246,201,14,0.42); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(246,201,14,0.12); }
-    .btn-dl-large-win-gravity:hover { background: rgba(232,64,64,0.09); border-color: rgba(232,64,64,0.42); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(232,64,64,0.12); }
+    .btn-dl-large-win { border-color: rgba(34,211,238,0.35); }
+    .btn-dl-large-win:hover { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.65); transform: translateY(-2px); }
+    .btn-dl-large-win-luminar { border-color: rgba(246,201,14,0.35); }
+    .btn-dl-large-win-luminar:hover { background: rgba(246,201,14,0.08); border-color: rgba(246,201,14,0.65); transform: translateY(-2px); }
+    .btn-dl-large-win-gravity { border-color: rgba(232,64,64,0.35); }
+    .btn-dl-large-win-gravity:hover { background: rgba(232,64,64,0.08); border-color: rgba(232,64,64,0.65); transform: translateY(-2px); }
     .dl-os-icon {
       display: flex; align-items: center; justify-content: center;
       width: 32px; height: 32px; border-radius: 10px;
@@ -1035,11 +1045,11 @@
           <div class="plugin-download-buttons">
             <a id="card-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-mac">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              macOS (Audio Unit)
+              macOS
             </a>
             <a id="card-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-win">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
-              Windows — .exe
+              Windows
             </a>
           </div>
           <div class="plugin-specs">
@@ -1102,11 +1112,11 @@
           <div class="plugin-download-buttons">
             <a id="card-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-mac-luminar">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              macOS (Audio Unit)
+              macOS
             </a>
             <a id="card-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-win-luminar">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
-              Windows — .exe
+              Windows
             </a>
           </div>
           <div class="plugin-specs">
@@ -1171,11 +1181,11 @@
           <div class="plugin-download-buttons">
             <a id="card-btn-mac-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-mac-gravity">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              macOS (Audio Unit)
+              macOS
             </a>
             <a id="card-btn-win-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-Windows-Setup.exe" class="btn-dl-win-gravity">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
-              Windows — .exe
+              Windows
             </a>
           </div>
           <div class="plugin-specs">
@@ -1239,11 +1249,11 @@
           <div class="plugin-download-buttons">
             <a id="card-btn-mac-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID_macOS_Installer.pkg" class="btn-dl-mac-void">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              macOS (Audio Unit / VST3)
+              macOS
             </a>
             <a id="card-btn-win-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID-1.0.0-Windows-Setup.exe" class="btn-dl-win-void">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
-              Windows — .exe
+              Windows
             </a>
           </div>
           <div class="plugin-specs">
@@ -1274,18 +1284,12 @@
             <p class="download-box-desc">Equalizador cirúrgico de 8 bandas com analisador em tempo real e Dynamic EQ.</p>
             <div class="download-box-actions">
               <a id="dl-btn-mac" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-large btn-dl-large-mac">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></span>
-                <div class="dl-info">
-                  <span>macOS (Audio Unit)</span>
-                  <small>10.15+ &middot; AU-Only Suite &middot; Silicon/Intel</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                macOS
               </a>
               <a id="dl-btn-win" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/AUREQ-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
-                <div class="dl-info">
-                  <span>Windows .exe</span>
-                  <small>10+ 64-bit &middot; VST3 (Recomendado)</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                Windows
               </a>
             </div>
           </div>
@@ -1296,18 +1300,12 @@
             <p class="download-box-desc">Enhancer paralelo de altas frequências com presença e ar de estúdio.</p>
             <div class="download-box-actions">
               <a id="dl-btn-mac-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-large btn-dl-large-mac-luminar">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></span>
-                <div class="dl-info">
-                  <span>macOS (Audio Unit)</span>
-                  <small>10.15+ &middot; AU-Only Suite &middot; Silicon/Intel</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                macOS
               </a>
               <a id="dl-btn-win-luminar" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/LUMINAR-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-luminar">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
-                <div class="dl-info">
-                  <span>Windows .exe</span>
-                  <small>10+ 64-bit &middot; VST3 (Recomendado)</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                Windows
               </a>
             </div>
           </div>
@@ -1318,18 +1316,12 @@
             <p class="download-box-desc">Compressor dinâmico com joelho soft-knee, ARC e comportamento Electro/Opto.</p>
             <div class="download-box-actions">
               <a id="dl-btn-mac-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/ASTRA-Audio-Suite-0.9.0-rc1-macOS-AU.pkg" class="btn-dl-large btn-dl-large-mac-gravity">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></span>
-                <div class="dl-info">
-                  <span>macOS (Audio Unit)</span>
-                  <small>10.15+ &middot; AU-Only Suite &middot; Silicon/Intel</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                macOS
               </a>
               <a id="dl-btn-win-gravity" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/GRAVITY-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-gravity">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
-                <div class="dl-info">
-                  <span>Windows .exe</span>
-                  <small>10+ 64-bit &middot; VST3 (Recomendado)</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                Windows
               </a>
             </div>
           </div>
@@ -1340,18 +1332,12 @@
             <p class="download-box-desc">Isolador espectral de voz e limpador de ruído ambiente com aceleração neural ONNX.</p>
             <div class="download-box-actions">
               <a id="dl-btn-mac-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID_macOS_Installer.pkg" class="btn-dl-large btn-dl-large-mac-void">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></span>
-                <div class="dl-info">
-                  <span>macOS (Audio Unit / VST3)</span>
-                  <small>10.15+ &middot; Universal Binary &middot; Silicon/Intel</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                macOS
               </a>
               <a id="dl-btn-win-void" href="https://github.com/SidyFurtado/VST-Project/releases/download/v1.0.0/VOID-1.0.0-Windows-Setup.exe" class="btn-dl-large btn-dl-large-win-void">
-                <span class="dl-os-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span>
-                <div class="dl-info">
-                  <span>Windows .exe</span>
-                  <small>10+ 64-bit &middot; VST3 (Recomendado)</small>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                Windows
               </a>
             </div>
           </div>
