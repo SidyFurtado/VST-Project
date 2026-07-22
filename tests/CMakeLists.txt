@@ -9,15 +9,15 @@ add_executable(AUREQ_FilterTests
     FilterStabilityTests.cpp
     
     # Compile the DSP classes directly to bypass linker target export complexities
-    ../plugins/01_EQ/DSP/BiquadFilter.cpp
-    ../plugins/01_EQ/DSP/ParameterSmoother.cpp
-    ../plugins/01_EQ/DSP/EQBand.cpp
+    ../plugins/AUREQ/DSP/BiquadFilter.cpp
+    ../plugins/AUREQ/DSP/ParameterSmoother.cpp
+    ../plugins/AUREQ/DSP/EQBand.cpp
 )
 
 # Include paths for source headers
 target_include_directories(AUREQ_FilterTests PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/01_EQ/Source
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/01_EQ/DSP
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AUREQ/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AUREQ/DSP
 )
 
 # Link directly to the required JUCE modules (no need to link AUREQ_SharedCode)

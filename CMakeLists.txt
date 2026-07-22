@@ -76,22 +76,11 @@ add_subdirectory(external/JUCE)
 # Incluir código compartilhado entre múltiplos plugins
 add_subdirectory(shared)
 
-# Incluir o primeiro plugin (EQ Paramétrico)
-add_subdirectory(plugins/01_EQ)
+# Incluir os plugins da ASTRA Audio Suite
+add_subdirectory(plugins/AUREQ)
+add_subdirectory(plugins/LUMINAR)
+add_subdirectory(plugins/GRAVITY)
+add_subdirectory(plugins/VOID)
 
-# Incluir o subdiretório de testes unitários do DSP (Fase 5.21)
+# Incluir o subdiretório de testes unitários do DSP
 add_subdirectory(tests)
-
-# Segundo plugin da ASTRA Audio Suite — LUMINAR (High-Frequency Enhancer)
-add_subdirectory(plugins/02_AIR)
-
-# Terceiro plugin da ASTRA Audio Suite — GRAVITY (Dynamic Compressor)
-add_subdirectory(plugins/03_GRAVITY)
-
-# Quarto plugin da ASTRA Audio Suite — VOID (AI Voice Isolation)
-add_subdirectory(plugins/05_VOID)
-
-# Placeholders para inclusão futura dos próximos plugins
-# add_subdirectory(plugins/02_Compressor)   # compressor legado — descontinuado
-# add_subdirectory(plugins/03_Saturation)
-# add_subdirectory(plugins/04_Limiter)
